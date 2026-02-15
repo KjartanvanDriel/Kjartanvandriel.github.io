@@ -1,152 +1,193 @@
 {
   "basics": {
-    "name": "Your Sidebar Name",
-    "email": "none@example.org",
+    "name": "Kjartan van Driel",
+    "email": "van-driel@csh.ac.at",
     "phone": "",
-    "website": "https://academicpages.github.io",
-    "summary": "Currently employed at Red Brick University. Short biography for the left-hand sidebar",
+    "website": "https://csh.ac.at/kjartan-van-driel/",
+    "summary": "PhD candidate at the Complexity Science Hub & TU Wien. Machine learning for complex adaptive systems, with a focus on supply chain dynamics.",
     "location": {
       "address": "",
       "postalCode": "",
-      "city": "Earth",
-      "countryCode": "US",
+      "city": "Vienna",
+      "countryCode": "AT",
       "region": ""
     },
     "profiles": [
       {
+        "network": "GitHub",
+        "username": "KjartanvanDriel",
+        "url": "https://github.com/KjartanvanDriel"
+      },
+      {
         "network": "Google Scholar",
         "username": "",
-        "url": "https://scholar.google.com/citations?user=PS_CX0AAAAAJ"
-      },
-      {
-        "network": "ORCID",
-        "username": "",
-        "url": "https://orcid.org/yourorcidurl"
-      },
-      {
-        "network": "GitHub",
-        "username": "academicpages",
-        "url": "https://github.com/academicpages"
+        "url": "https://scholar.google.com/citations?user=Gf5z30kAAAAJ"
       }
     ]
   },
-  "work": [],
-  "education": [
+  "work": [
     {
-      "institution": "GitHub University",
-      "area": "Ph.D in Version Control Theory",
-      "studyType": "",
-      "startDate": "",
-      "endDate": "2018",
-      "gpa": null,
-      "courses": []
+      "company": "Gimli",
+      "position": "Quantitative Analyst (part-time)",
+      "website": "",
+      "startDate": "2021",
+      "endDate": "2022",
+      "summary": "Game-theoretic models for Flashbots MEV blind auction bid optimisation.",
+      "highlights": []
     },
     {
-      "institution": "GitHub University",
-      "area": "M.S. in Jekyll",
-      "studyType": "",
-      "startDate": "",
-      "endDate": "2014",
-      "gpa": null,
-      "courses": []
+      "company": "MindHash",
+      "position": "Intern Analyst (part-time)",
+      "website": "",
+      "startDate": "2020",
+      "endDate": "2021",
+      "summary": "Machine learning for object extraction and tracking in LiDAR point cloud data.",
+      "highlights": []
     },
     {
-      "institution": "GitHub University",
-      "area": "B.S. in GitHub",
-      "studyType": "",
-      "startDate": "",
-      "endDate": "2012",
-      "gpa": null,
-      "courses": []
+      "company": "Blommers Coffee Roastery",
+      "position": "",
+      "website": "",
+      "startDate": "2020",
+      "endDate": "2021",
+      "summary": "",
+      "highlights": []
+    },
+    {
+      "company": "University of Washington, Seattle",
+      "position": "Undergraduate Researcher",
+      "website": "",
+      "startDate": "2020",
+      "endDate": "2020",
+      "summary": "Computational research on constrained mutations in genome space.",
+      "highlights": []
+    },
+    {
+      "company": "Radboud Universiteit",
+      "position": "Teaching Assistant / Tutor",
+      "website": "",
+      "startDate": "2015",
+      "endDate": "2020",
+      "summary": "",
+      "highlights": []
     }
   ],
-  "skills": [],
-  "languages": [],
+  "education": [
+    {
+      "institution": "Complexity Science Hub & TU Wien, Vienna",
+      "area": "ML methods for dynamic graph-structured data",
+      "studyType": "PhD",
+      "startDate": "2023",
+      "endDate": "",
+      "gpa": null,
+      "courses": [],
+      "summary": "Machine learning for complex adaptive systems, with a focus on supply chain dynamics. Supervisor: Stefan Thurner."
+    },
+    {
+      "institution": "Universiteit van Amsterdam",
+      "area": "Physics (Theoretical Physics track)",
+      "studyType": "MSc",
+      "startDate": "2020",
+      "endDate": "2023",
+      "gpa": "9.0/10",
+      "courses": [],
+      "summary": "Thesis: Approximate Inference in Spiking Neural Networks, Max Planck Institute for Dynamics and Self-Organization, Göttingen. Supervisors: V. Priesemann, F. Mikulasch, L. Rudelt."
+    },
+    {
+      "institution": "Radboud Universiteit, Nijmegen",
+      "area": "Physics & Mathematics",
+      "studyType": "BSc (cum laude)",
+      "startDate": "2017",
+      "endDate": "2020",
+      "gpa": "cum laude",
+      "courses": [],
+      "summary": "Thesis: Path-Integral Control Theory Applied to Evolutionary Dynamics, Donders Institute. Supervisors: H.J. Kappen, A. Nourmohammad. Honours Programme: funded research at the University of Washington, Seattle."
+    }
+  ],
+  "skills": [
+    {
+      "name": "Programming",
+      "level": "",
+      "keywords": ["Python (PyTorch, PyTorch Geometric, JAX)", "CUDA / Triton", "C++", "LaTeX", "Git", "Linux / Slurm"]
+    },
+    {
+      "name": "Methods",
+      "level": "",
+      "keywords": ["Graph neural networks", "Normalizing flows", "Dynamic graph generation", "Spiking neural networks", "Variational inference", "Network science", "Probabilistic generative models"]
+    },
+    {
+      "name": "Languages",
+      "level": "",
+      "keywords": ["Dutch (native)", "English (fluent)", "German (B2)"]
+    }
+  ],
+  "languages": [
+    {"language": "Dutch", "fluency": "Native"},
+    {"language": "English", "fluency": "Fluent"},
+    {"language": "German", "fluency": "B2"}
+  ],
   "interests": [],
   "references": [],
   "publications": [
     {
-      "name": "Paper Title Number 1",
-      "publisher": "Journal 1",
-      "releaseDate": "2009-10-01",
-      "website": "https://academicpages.github.io/files/paper1.pdf",
-      "summary": "This paper is about the number 1. The number 2 is left for future work."
+      "name": "Generalized Degrees for Scalable Discrete Time Dynamic Graph Generation",
+      "publisher": "Learning on Graphs Conference",
+      "releaseDate": "2025-10-23",
+      "website": "https://openreview.net/forum?id=yVJXsCC8NY",
+      "summary": "K. van Driel, L.N. Ialongo, P.A. Astudillo-Estévez, S. Thurner. Oral presentation (extended abstract)."
     },
     {
-      "name": "Paper Title Number 2",
-      "publisher": "Journal 1",
-      "releaseDate": "2010-10-01",
-      "website": "https://academicpages.github.io/files/paper2.pdf",
-      "summary": "This paper is about the number 2. The number 3 is left for future work."
-    },
-    {
-      "name": "Paper Title Number 3",
-      "publisher": "Journal 1",
-      "releaseDate": "2015-10-01",
-      "website": "https://academicpages.github.io/files/paper3.pdf",
-      "summary": "This paper is about the number 3. The number 4 is left for future work."
-    },
-    {
-      "name": "Paper Title Number 4",
-      "publisher": "GitHub Journal of Bugs",
-      "releaseDate": "2024-02-17",
-      "website": "https://academicpages.github.io/files/paper3.pdf",
-      "summary": "This paper is about fixing template issue #693."
+      "name": "Prediction Mismatch Responses Arise as Corrections of a Predictive Spiking Code",
+      "publisher": "bioRxiv preprint",
+      "releaseDate": "2023-11-16",
+      "website": "https://www.biorxiv.org/content/10.1101/2023.11.16.567335v1",
+      "summary": "K. van Driel, L. Rudelt, V. Priesemann, F.A. Mikulasch."
     }
   ],
   "presentations": [
     {
-      "name": "Talk 1 on Relevant Topic in Your Field",
-      "event": "UC San Francisco, Department of Testing",
-      "date": "2012-03-01",
-      "location": "San Francisco, CA, USA",
+      "name": "Complexity science in the green transition",
+      "event": "European Forum Alpbach",
+      "date": "2025",
+      "location": "Alpbach, Austria",
       "description": ""
     },
     {
-      "name": "Tutorial 1 on Relevant Topic in Your Field",
-      "event": "UC-Berkeley Institute for Testing Science",
-      "date": "2013-03-01",
-      "location": "Berkeley, CA, USA",
+      "name": "Generalized Degrees for Scalable Discrete Time Dynamic Graph Generation",
+      "event": "Learning on Graphs Conference",
+      "date": "2025",
+      "location": "",
+      "description": "Oral presentation"
+    },
+    {
+      "name": "Summer School on Economic Networks",
+      "event": "University of Oxford",
+      "date": "2024",
+      "location": "Oxford, UK",
       "description": ""
     },
     {
-      "name": "Talk 2 on Relevant Topic in Your Field",
-      "event": "London School of Testing",
-      "date": "2014-02-01",
-      "location": "London, UK",
+      "name": "Volunteer",
+      "event": "ICLR",
+      "date": "2024",
+      "location": "",
       "description": ""
     },
     {
-      "name": "Conference Proceeding talk 3 on Relevant Topic in Your Field",
-      "event": "Testing Institute of America 2014 Annual Conference",
-      "date": "2014-03-01",
-      "location": "Los Angeles, CA, USA",
+      "name": "CSH Winter School on Complex Systems",
+      "event": "Complexity Science Hub",
+      "date": "2024",
+      "location": "Vienna, Austria",
+      "description": ""
+    },
+    {
+      "name": "Summer School on Economic Complexity",
+      "event": "Maastricht University",
+      "date": "2024",
+      "location": "Maastricht, Netherlands",
       "description": ""
     }
   ],
-  "teaching": [
-    {
-      "course": "Teaching experience 1",
-      "institution": "University 1, Department",
-      "date": "2014-01-01",
-      "role": "Undergraduate course",
-      "description": ""
-    },
-    {
-      "course": "Teaching experience 2",
-      "institution": "University 1, Department",
-      "date": "2015-01-01",
-      "role": "Workshop",
-      "description": ""
-    }
-  ],
-  "portfolio": [
-    {
-      "name": "Portfolio item number 1",
-      "category": "portfolio",
-      "date": "",
-      "url": "",
-      "description": "Short description of portfolio item number 1<br/><img src='/images/500x300.png'>"
-    }
-  ]
+  "teaching": [],
+  "portfolio": []
 }

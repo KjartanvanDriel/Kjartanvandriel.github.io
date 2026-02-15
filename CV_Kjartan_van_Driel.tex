@@ -1,0 +1,184 @@
+% !TEX program = xelatex
+\documentclass[10.5pt,a4paper]{article}
+
+% ---- Packages ----
+\usepackage[margin=1.8cm, top=1.5cm, bottom=1.5cm]{geometry}
+\usepackage{fontspec}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{parskip}
+
+% ---- Fonts ----
+\setmainfont{TeX Gyre Pagella}
+\setsansfont{TeX Gyre Heros}
+
+% ---- Colors ----
+\definecolor{accent}{HTML}{333333}
+\definecolor{link}{HTML}{44546A}
+\definecolor{light}{HTML}{888888}
+\definecolor{rule}{HTML}{BBBBBB}
+
+% ---- Hyperlink setup ----
+\hypersetup{
+    colorlinks=true,
+    urlcolor=link,
+    linkcolor=link,
+    pdfauthor={Kjartan van Driel},
+    pdftitle={CV -- Kjartan van Driel}
+}
+
+% ---- Section formatting ----
+\titleformat{\section}
+    {\normalsize\sffamily\bfseries\color{accent}}
+    {}{0em}{\uppercase}[\vspace{-0.6em}{\color{rule}\rule{\linewidth}{0.3pt}}]
+\titlespacing{\section}{0pt}{0.8em}{0.35em}
+
+% ---- No page numbers ----
+\pagestyle{empty}
+
+% ---- Set paragraph spacing ----
+\setlength{\parskip}{0pt}
+\setlength{\parindent}{0em}
+
+\begin{document}
+
+% ---- Header ----
+\begin{center}
+    {\Large\sffamily\bfseries\color{accent} Kjartan van Driel}\\[0.35em]
+    {\small\color{light}
+    \href{mailto:van-driel@csh.ac.at}{van-driel@csh.ac.at}%
+    \enspaceÂ·\enspace
+    \href{https://csh.ac.at/kjartan-van-driel/}{csh.ac.at/kjartan-van-driel}%
+    \enspaceÂ·\enspace
+    \href{https://github.com/KjartanvanDriel}{github.com/KjartanvanDriel}
+    }
+\end{center}
+
+\vspace{0.1em}
+
+% ---- Education ----
+\section{Education}
+
+\textbf{PhD Candidate}\hfill{\small\color{light}2023\,--\,present}\\
+Complexity Science Hub \& TU Wien, Vienna\\
+{\small ML methods for dynamic graph-structured data, applied to supply-chain networks to reveal vulnerabilities and support the green economic transition. Supervisor: Stefan Thurner.}
+
+\vspace{0.45em}
+
+\textbf{MSc Physics}\enspace{\small(9.0/10 GPA; 4.0/4.0 US)}\hfill{\small\color{light}2020\,--\,2023}\\
+Universiteit van Amsterdam --- Theoretical Physics track\\
+{\small Thesis: \textit{Approximate Inference in Spiking Neural Networks}, Max Planck Institute for Dynamics and Self-Organization, Göttingen. Supervisors: V.~Priesemann, F.~Mikulasch, L.~Rudelt.}
+
+\vspace{0.45em}
+
+\textbf{BSc Physics \& BSc Mathematics}\enspace{\small(\textit{cum laude})}\hfill{\small\color{light}2017\,--\,2020}\\
+Radboud Universiteit, Nijmegen\\
+{\small Thesis: \textit{Path-Integral Control Theory Applied to Evolutionary Dynamics}, Donders Institute. Supervisors: H.J.~Kappen, A.~Nourmohammad.\\
+\hspace*{1.5em}Honours Programme: funded research at the University of Washington, Seattle.}
+
+% ---- Publications ----
+\section{Publications}
+
+{\small
+\textbf{K.~van Driel}, L.N.~Ialongo, P.A.~Astudillo-Estévez, S.~Thurner.
+\textit{Generalized Degrees for Scalable Discrete Time Dynamic Graph Generation.}
+Learning on Graphs Conference, 2025. \textbf{Oral.}
+\href{https://openreview.net/forum?id=yVJXsCC8NY}{[paper]}
+\href{https://github.com/KjartanvanDriel/GenDeg}{[code]}
+}
+
+\vspace{0.35em}
+
+{\small
+\textbf{K.~van Driel}, L.~Rudelt, V.~Priesemann, F.A.~Mikulasch.
+\textit{Prediction Mismatch Responses Arise as Corrections of a Predictive Spiking Code.}
+bioRxiv preprint, 2023.
+\href{https://www.biorxiv.org/content/10.1101/2023.11.16.567335v1}{[paper]}
+\href{https://github.com/Priesemann-Group/prediction_mismatch}{[code]}
+}
+
+% ---- Talks & Conferences ----
+\section{Talks \& Conferences}
+
+{\small
+\begin{tabular}{@{}p{0.82\linewidth}r@{}}
+European Forum Alpbach --- \textit{Complexity science in the green transition} & \color{light}2025\\[0.1em]
+Learning on Graphs Conference --- Oral presentation & \color{light}2025\\[0.1em]
+Summer School on Economic Networks, University of Oxford & \color{light}2024\\[0.1em]
+ICLR --- Volunteer & \color{light}2024\\[0.1em]
+CSH Winter School on Complex Systems & \color{light}2024\\[0.1em]
+Summer School on Economic Complexity, Maastricht University & \color{light}2024\\
+\end{tabular}
+}
+
+% ---- Work Experience ----
+\section{Experience}
+
+\textbf{Quantitative Analyst}\enspace{\small(part-time)}\hfill{\small\color{light}2021\,--\,2022}\\
+{\small Gimli --- Game-theoretic models for Flashbots MEV blind auction bid optimisation.}
+
+\vspace{0.4em}
+
+\textbf{Intern Analyst}\enspace{\small(part-time)}\hfill{\small\color{light}2020\,--\,2021}\\
+{\small MindHash --- Machine learning for object extraction and tracking in LiDAR point cloud data.}
+
+\vspace{0.4em}
+
+\textbf{Blommers Coffee Roastery}, Nijmegen\hfill{\small\color{light}2020\,--\,2021}
+
+\vspace{0.4em}
+
+\textbf{Undergraduate Researcher}\hfill{\small\color{light}2020}\\
+{\small University of Washington, Seattle --- Computational research on constrained mutations in genome space.}
+
+\vspace{0.4em}
+
+\textbf{Teaching Assistant / Tutor}\hfill{\small\color{light}2015\,--\,2020}\\
+{\small Radboud Universiteit}
+
+% ---- Activities ----
+\section{Activities}
+
+{\small
+\begin{tabular}{@{}p{0.82\linewidth}r@{}}
+Reading group on EU industrial and economic policy (organiser), CSH & \color{light}2024\\[0.1em]
+Honours Programme, interdisciplinary research (Radboud) & \color{light}2017\,--\,2020\\[0.1em]
+Symposium Committee, study association Marie Curie & \color{light}2017\,--\,2019\\[0.1em]
+Physics Bachelor Representative at high schools \& universities & \color{light}2017\,--\,2019\\
+\end{tabular}
+}
+
+% ---- Skills ----
+\section{Skills}
+
+{\small
+\textbf{Programming}\enspace
+Python (PyTorch, PyTorch Geometric, JAX)\enspaceÂ·\enspace
+CUDA / Triton\enspaceÂ·\enspace
+C\texttt{++}\enspaceÂ·\enspace
+\LaTeX\enspaceÂ·\enspace
+Git\enspaceÂ·\enspace
+Linux / Slurm
+
+\vspace{0.25em}
+
+\textbf{Methods}\enspace
+Graph neural networks\enspaceÂ·\enspace
+Normalizing flows\enspaceÂ·\enspace
+Dynamic graph generation\enspaceÂ·\enspace
+Spiking neural networks\enspaceÂ·\enspace
+Variational inference\enspaceÂ·\enspace
+Network science\enspaceÂ·\enspace
+Probabilistic generative models
+
+\vspace{0.25em}
+
+\textbf{Languages}\enspace
+Dutch (native)\enspaceÂ·\enspace
+English (fluent)\enspaceÂ·\enspace
+German (B2)
+}
+
+\end{document}
