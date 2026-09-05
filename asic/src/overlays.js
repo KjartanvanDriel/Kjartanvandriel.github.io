@@ -629,10 +629,14 @@ export class Wires {
     // each. The first arrow is the edge's own path; the rest are clones made
     // as needed and hidden again when the beat moves on.
     for (const arc of this.arcs) for (const x of arc.extra || []) x.style.display = "none";
+    // the clock reaches every region, so once the die drops away and the
+    // graph reflows (`morph`) its fan is pure clutter; it is drawn only on the
+    // map, over the die, where the clock node was asked for
+    const hideClock = morph > 0.5;
     this.edges.forEach((e, i) => {
       const arc = this.arcs[i], { path } = arc, cnt = this.counts[i];
       const A = P[e.a], B = (black && e.a === black) ? RP[e.b] : P[e.b];
-      if (!A || !B || !onEdge(e)) { path.style.display = cnt.style.display = "none"; return; }
+      if (!A || !B || !onEdge(e) || (e.clock && hideClock)) { path.style.display = cnt.style.display = "none"; return; }
       const targets = black ? (subs && subs[`${e.a}>${e.b}`]) || [null] : [null];
       targets.forEach((sb, t) => {
         let line = path;
@@ -693,8 +697,8 @@ export class Wires {
     });
     this.ports.forEach((p, i) => {
       const n = this.pins[i], q = P[p.id];
-      const live = this.edges.some(e => (e.a === p.id || e.b === p.id) && onEdge(e));
-      if (!live) { n.style.display = "none"; return; }
+      const live = this.edges.some(e => (e.a === p.id || e.b === p.id) && onEdge(e) && !(e.clock && hideClock));
+      if (!live || !q) { n.style.display = "none"; return; }
       n.querySelector("circle").setAttribute("cx", q[0].toFixed(1));
       n.querySelector("circle").setAttribute("cy", q[1].toFixed(1));
       // the label goes outward, away from the die, or it lands on the chip

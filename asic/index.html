@@ -205,7 +205,7 @@
     <h2>Connecting components</h2>
     <p>Naturally, two cells connect if there is a conducting path between them, and what counts as a conductor is defined by the technology we're using to fabricate the chip. For sky130, we again refer to the diagram. The <code>met</code> -- as well as the <code>li1</code> -- layers conduct over distances. These layers are connected by vias, which conduct from layer to layer.</p>
     <figure id="xsec2">
-      <figcaption>Shapes touching on the same conductor layer are connected. A contact or via joins adjacent layers. The drawing is schematic and not to scale.</figcaption>
+      <figcaption>Polygons touching on the same conductor layer are connected. A contact or via joins adjacent layers. The drawing is schematic and not to scale.</figcaption>
     </figure>
   </section>
   <section class="beat" id="a2-trace">
@@ -293,7 +293,7 @@
     <p>Without memory, the output is a fixed function of the two counters, so we don't even need the clock. We set the counters to each of the 121 positions and read the four wires.</p>
     <p>They take eleven different values. When we colour the grid by these values, the cells that share a value form a patch, and we get eleven patches of quite different sizes, from four cells to twenty-eight, with rather odd outlines.</p>
     <figure id="grid-patches">
-      <figcaption>The grid coloured by the four wires. Eleven values, eleven patches, and no two the same shape.</figcaption>
+      <figcaption>The grid coloured by the four wires. Eleven values, eleven patches, and no two alike.</figcaption>
     </figure>
     <p>We can describe the result as a lookup table from grid position to patch number. This implementation uses 147 gates. So this box answers one question: which patch is the current cell in? We'll call it the patch map.</p>
   </section>
