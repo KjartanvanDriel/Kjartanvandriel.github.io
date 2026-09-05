@@ -504,9 +504,23 @@ export function trophicLayout(regions, ports, edges, seed = {}) {
     const core = ids.filter(d => !kind[d]).sort((a, b) => yy[a] - yy[b]);
     const span = i => 0.06 + 0.88 * (core.length > 1 ? i / (core.length - 1) : 0.5);
     core.forEach((d, i) => { out[d] = span(i); });
-    for (const d of ids) if (kind[d]) {           // a pin sits among the blocks it is level with
-      const below = core.filter(c => yy[c] <= yy[d]).length;
-      out[d] = span(Math.max(0, Math.min(core.length - 1, below - 0.5)));
+    // A pin sits level with the blocks it talks to: the mean of their placed
+    // heights. Pins on one side are then kept a readable distance apart, so
+    // two outputs never print on top of each other, and nothing is pushed to
+    // the very edge of the frame.
+    for (const side of ["input", "output"]) {
+      const pins = ids.filter(d => kind[d] === side);
+      for (const d of pins) {
+        const with_ = nb[d].map(([o]) => out[o]).filter(v => v !== undefined);
+        out[d] = with_.length ? with_.reduce((a, v) => a + v, 0) / with_.length : 0.5;
+      }
+      pins.sort((a, b) => out[a] - out[b]);
+      const GAPP = 0.16;
+      for (let i = 1; i < pins.length; i++)
+        if (out[pins[i]] - out[pins[i - 1]] < GAPP) out[pins[i]] = out[pins[i - 1]] + GAPP;
+      const over = out[pins[pins.length - 1]] - 0.9;
+      if (over > 0) for (const d of pins) out[d] -= over;
+      for (const d of pins) out[d] = Math.max(0.1, out[d]);
     }
     return out;
   };
