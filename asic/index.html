@@ -172,7 +172,7 @@
     <p>For us, this means they can mostly be ignored. We just need to keep track of the clock.</p>
   </section>
   <section class="beat" id="a1-close">
-    <h2>Patchwork of components</h2>
+    <h2>Back to the whole chip</h2>
     <p>If we colour the cells by the kind of component they implement, we can see how much of the chip is made from the same few building blocks. The layout is still fairly overwhelming, but we now have some idea of what we're looking at.</p>
     <p>To work out what the whole chip does, we need to know how those components are connected. That means following the wires between them, which is what we'll do in part two.</p>
   </section>
@@ -251,7 +251,7 @@
     <p>Some regions are near the outputs, such as R10, which gives us the <code>success</code> bit, and R11, which writes <code>O</code>. Some have many inputs, outputs, and memory bits, such as R5 and R7, and others have very few inputs, like R1.</p>
   </section>
   <section class="beat" id="a3-flow">
-    <h2>Take the die away</h2>
+    <h2>Ordering the regions</h2>
     <p>We can now draw the regions as a graph and arrange them according to how information passes between them.</p>
     <p>Next, to see where a region sits in the flow of information, we can look at the <a href="https://royalsocietypublishing.org/doi/10.1098/rsos.201138">trophic level</a> of each component. It's a measure from ecology that roughly defines a position in a food web, from prey to predator. For us, that would mean from input to output.</p>
     <p>The regions, now drawn with their trophic level in mind, give us an indication of where to start. We see that region 1 is at the bottom of the food chain and tends to feed downstream.</p>
@@ -350,7 +350,7 @@
     <p>The rectangle also holds two more memory bits. One starts the readout after the input ends. The other records the case where all the counts pass but the neighbour check fails, so the output writer can choose a different message.</p>
   </section>
   <section class="beat" id="a3-named">
-    <h2>Everything together</h2>
+    <h2>The rules</h2>
     <p>Taking a step back, we've mapped out every region and its function. In sum, the success conditions are:</p>
     <p>- two per row - two per column - two per region - none touching - 22 in all</p>
     <p>If you were any more attentive than me, you might already have realised that these are the rules of the two stars game. This is a Star Battle. The chip is a Star Battle validator, and the eleven patches decoded by R4 divide up its board.</p>
