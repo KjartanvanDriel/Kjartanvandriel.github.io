@@ -36,7 +36,7 @@ body {
 
 /* ---------- prose ---------- */
 
-.beat { padding: 18vh 0; }
+.beat { padding: 28vh 0; }   /* room between beats, so each picture has settled before the next heading arrives */
 .beat:first-of-type { padding-top: 30vh; }
 .beat:last-of-type  { padding-bottom: 46vh; }
 .beat h2 { font: 400 1.42rem/1.25 var(--serif); margin: 0 0 .85em; }
