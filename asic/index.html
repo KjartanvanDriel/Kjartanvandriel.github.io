@@ -504,29 +504,18 @@
     <div class="wm">part ii</div>
   </div>
   <div class="strip tall" data-panel="protocol">
-    <pre class="code" data-code><span class="ln">`timescale 1ns/1ps</span>
-<span class="ln">module tb;</span>
-<span class="ln">  reg  clk = 0, rst_n = 0, enable = 0, I = 0;</span>
-<span class="ln">  wire success;</span>
-<span class="ln">  wire [7:0] O;</span>
-<span class="ln">  reg  bits [0:120];                          // the grid, one bit per line, row by row</span>
-<span class="ln">  integer k;</span>
-<span class="ln"> </span>
-<span class="ln">  puzzle dut (.clk(clk), .rst_n(rst_n), .enable(enable), .I(I), .O(O), .success(success));</span>
-<span class="ln"> </span>
-<span class="ln">  always #5 clk = ~clk;</span>
-<span class="ln"> </span>
+    <div class="cap">tb_puzzle.v</div>
+    <pre class="code" data-code><span class="ln">module tb;</span>
+<span class="ln">  ⋮</span>
 <span class="ln">  initial begin</span>
-<span class="ln">    $readmemb(&quot;grid.txt&quot;, bits);</span>
-<span class="ln">    repeat (3) @(posedge clk);                // three cycles in reset</span>
+<span class="ln">    repeat (3) @(posedge clk);                // reset held low</span>
 <span class="ln">    rst_n = 1;                @(posedge clk);</span>
 <span class="ln">    enable = 1;</span>
 <span class="ln">    for (k = 0; k &lt; 121; k = k + 1) begin I = bits[k]; @(posedge clk); end</span>
-<span class="ln">    enable = 0;  I = 0;</span>
-<span class="ln">    repeat (32) begin @(posedge clk); if (O != 0) $write(&quot;%c&quot;, O); end</span>
-<span class="ln">    $display(&quot;  success = %b&quot;, success);</span>
-<span class="ln">    $finish;</span>
+<span class="ln">    enable = 0;</span>
+<span class="ln">    repeat (32) begin @(posedge clk); $write(&quot;%c&quot;, O); end</span>
 <span class="ln">  end</span>
+<span class="ln">  ⋮</span>
 <span class="ln">endmodule</span>
 </pre>
     <svg class="pix" data-input-pixels viewBox="0 0 560 230" xmlns="http://www.w3.org/2000/svg"></svg>
