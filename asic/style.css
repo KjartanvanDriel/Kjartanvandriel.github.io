@@ -1,0 +1,379 @@
+/* Type and layout. Every colour comes from theme.css.
+
+   Prose left in ET Book on cream, the chip pane right and wider, sticky.
+   One accent hue for every link, marker and hover fill. */
+
+@font-face { font-family:"ET Book"; font-weight:400; font-style:normal; font-display:swap;
+  src:url("fonts/et-book-roman-line-figures.woff") format("woff"); }
+@font-face { font-family:"ET Book"; font-weight:400; font-style:italic; font-display:swap;
+  src:url("fonts/et-book-display-italic-old-style-figures.woff") format("woff"); }
+@font-face { font-family:"ET Book"; font-weight:700; font-style:normal; font-display:swap;
+  src:url("fonts/et-book-bold-line-figures.woff") format("woff"); }
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--cream);
+  color: var(--ink);
+  font: 400 17px/1.52 var(--serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---------- layout: prose left, chip right and wider ---------- */
+
+.spread { display: grid; grid-template-columns: minmax(0, 42fr) minmax(0, 58fr); }
+
+.prose { padding: 0 5.5rem 0 7rem; }
+.prose > * { max-width: var(--measure); }
+
+.pane { position: sticky; top: 0; height: 100vh; background: var(--pane);
+        border-left: 1px solid var(--grey-2); overflow: hidden; }
+.pane canvas { display: block; width: 100%; height: 100%; }
+
+/* ---------- prose ---------- */
+
+.beat { padding: 18vh 0; }
+.beat:first-of-type { padding-top: 30vh; }
+.beat:last-of-type  { padding-bottom: 46vh; }
+.beat h2 { font: 400 1.42rem/1.25 var(--serif); margin: 0 0 .85em; }
+.beat p { margin: 0 0 1.1em; }
+.beat p:last-child { margin-bottom: 0; }
+em { font-style: italic; }
+
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-soft); }
+a:hover { background: var(--accent-soft); border-bottom-color: var(--accent); }
+
+a.fn { border: 0; font-size: .72em; vertical-align: super; line-height: 0; padding: 0 .1em; }
+a.fn:hover { background: none; text-decoration: none; }
+
+/* a word in the prose that an arrow runs from */
+.pin { font-family: var(--mono); font-size: .82em; letter-spacing: .04em;
+       color: var(--accent); white-space: nowrap; }
+
+/* ---------- contents: the three parts, at the top of the prose ---------- */
+
+.toc { padding: 3rem 0 0; color: var(--ink-2); }
+.toc ol { list-style: none; margin: 0; padding: 0; }
+.toc > ol > li { margin: 0 0 .55rem; }
+.toc a { color: inherit; border: 0; }
+.toc a:hover { color: var(--accent); background: none; }
+.toc .part { display: block; font: 400 1.05rem/1.4 var(--serif); color: var(--ink); }
+.toc .n { display: inline-block; width: 1.6rem; font: 400 .72rem var(--mono); color: var(--accent); }
+
+/* ---------- title ---------- */
+
+.title { padding: 34vh 0 14vh; }
+.title.act { padding-top: 40vh; border-top: 1px solid var(--grey-2); margin-top: 10vh; }
+.title h1 { font: 400 2.7rem/1.08 var(--serif); margin: 0 0 .2rem; }
+.title .dek { font: italic 400 1.5rem/1.2 var(--serif); margin: 0 0 1.4rem; color: var(--ink-2); }
+.title .kicker { font: 400 .72rem/1 var(--mono); letter-spacing: .16em;
+                 text-transform: uppercase; color: var(--ink-2); margin: 0 0 1.6rem; }
+.lede { font-size: 1.12rem; color: var(--ink-2); }
+
+/* ---------- expandables ---------- */
+
+details { border: 1.5px solid var(--grey-2); border-radius: 5px;
+          padding: .55rem .9rem; margin: 1.4em 0; }
+details[open] { padding-bottom: .9rem; }
+details > summary { font-family: var(--serif); font-weight: 700; cursor: pointer;
+                    list-style: none; display: flex; align-items: baseline; gap: .55rem; }
+details > summary::-webkit-details-marker { display: none; }
+details > summary::before { content: "+"; color: var(--accent); font-family: var(--mono); font-size: .8em; }
+details[open] > summary::before { content: "\2013"; }
+details > summary:hover { color: var(--accent); }
+details > p { margin: .8em 0 0; }
+details > p:first-of-type { margin-top: .9em; }
+
+/* ---------- inline figure ---------- */
+
+/* A figure fills the prose column, wider than the text measure, and sits on
+   the page ground: no box, no border, the same cream behind it. Type in a
+   figure is sized against the body text, not shrunk to fit: the wiki's
+   plotting style guide puts figure text at 8 to 10 pt against a 10 pt body,
+   so here it is 0.85 to 1 of the body and never below 0.7. */
+figure { margin: 2em 0; width: calc(100% + 6rem); max-width: none; margin-left: -3rem;
+         background: none; }
+figure text { font-size: 15px; }
+figure svg, figure img { display: block; width: 100%; height: auto; background: none; }
+figcaption { font: 400 .68rem/1.5 var(--mono); letter-spacing: .05em;
+             color: var(--ink-2); margin-top: .6rem; }
+
+/* ---------- footnotes ---------- */
+
+.notes { border-top: 1px solid var(--grey-2); padding: 8vh 0 20vh; }
+.notes h2 { font: 400 1.15rem/1.2 var(--serif); margin: 0 0 1.2em; }
+.notes ol { padding-left: 1.4em; margin: 0; }
+.notes li { margin-bottom: .9em; color: var(--ink-2); font-size: .94rem; }
+.notes li:target { background: var(--accent-soft); }
+
+/* ---------- sidebar: monospace only ---------- */
+
+.sidebar { position: absolute; top: 2rem; left: 2rem; z-index: 3;
+           font-family: var(--mono); pointer-events: none;
+           display: flex; flex-direction: column; gap: 1.15rem; }
+.pill { align-self: flex-start; background: var(--ink); color: var(--cream);
+        font: 400 .66rem/1 var(--mono); letter-spacing: .14em; text-transform: uppercase;
+        padding: .42rem .62rem; border-radius: 2px; }
+.stat .k { font: 400 .62rem/1 var(--mono); letter-spacing: .17em; text-transform: uppercase;
+           color: var(--ink-2); display: block; margin-bottom: .3rem; }
+.stat .v { font: 700 1.45rem/1 var(--mono); color: var(--ink); font-variant-numeric: tabular-nums; }
+
+/* ---------- dev panel: monospace, fixed, out of the way ---------- */
+
+.dev { position: fixed; right: 1rem; bottom: 1rem; z-index: 20; width: 22rem;
+       background: var(--cream); border: 1.5px solid var(--grey-2); border-radius: 5px;
+       padding: .7rem .8rem; font: 400 .66rem/1.5 var(--mono); color: var(--ink);
+       box-shadow: 0 2px 12px #0002; }
+.dev-row { display: flex; align-items: center; gap: .45rem; margin: .2rem 0; }
+.dev-row input[type=range] { flex: 1; min-width: 0; accent-color: var(--accent); }
+.dev-row output { width: 3.6rem; text-align: right; font-variant-numeric: tabular-nums; }
+.dev-row select { flex: 1; font: inherit; }
+.dev-row button { font: inherit; padding: .1rem .5rem; border: 1px solid var(--grey-1);
+                  background: var(--pane); border-radius: 3px; cursor: pointer; }
+.dev-k { width: 5.2rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+.dev-beat { font: 700 1rem/1.3 var(--mono); color: var(--accent); margin: .4rem 0 .1rem; letter-spacing: .04em; }
+.dev-live { color: var(--ink-2); margin: .3rem 0 .5rem; letter-spacing: .04em; }
+.dev-note { flex: 1; color: var(--accent); word-break: break-all; }
+
+/* ---------- overlays inside the pane ---------- */
+
+/* Labels sit above the arrows, so a line running from the prose to a pad
+   passes under the label it is pointing at rather than across it. Both layers
+   are fixed to the viewport because an arrow starts in the prose column. */
+#tags { position: fixed; inset: 0; z-index: 6; pointer-events: none; }
+
+/* gate symbols over placed cells: above the canvas, under the labels */
+/* Every overlay is clipped to the pane. They are fixed to the viewport so a
+   line can start in the prose, but a cell box or a region frame belongs on
+   the chip and must not land on the text. */
+#symbols, #frames, #sketch, #outlines, #cards {
+  position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; overflow: visible;
+  clip-path: inset(0 0 0 var(--pane-left, 42%));
+}
+#symbols { z-index: 4; }
+.sym .g   { fill: var(--cream); stroke: var(--ink); stroke-width: 1.4; vector-effect: non-scaling-stroke; }
+.sym .gl  { fill: none; stroke: var(--ink); stroke-width: 1.4; vector-effect: non-scaling-stroke; }
+.sym .bub { fill: var(--cream); stroke: var(--ink); stroke-width: 1.2; vector-effect: non-scaling-stroke; }
+
+/* a drawing in a subject's own coordinates */
+#sketch { z-index: 5; }
+.sketch * { vector-effect: non-scaling-stroke; }
+/* A beat with `loop` publishes a step on the root; the schematic and the
+   diagram below it both light the same thing at the same time. */
+.sketch [data-gate] { transition: stroke .25s linear; }
+:root[data-step="0"] .sketch [data-gate="CLK"],
+:root[data-step="1"] .sketch [data-gate="D"],
+:root[data-step="2"] .sketch [data-gate=""],
+:root[data-step="3"] .sketch [data-gate="RESET_B"] { stroke: var(--accent); stroke-width: 2.6; }
+:root[data-step="0"] .stage0, :root[data-step="1"] .stage1,
+:root[data-step="2"] .stage2, :root[data-step="3"] .stage3 { opacity: 1; }
+.stage0, .stage1, .stage2, .stage3 { opacity: 0; transition: opacity .25s linear; }
+.sketch text { font-family: var(--mono); letter-spacing: .04em; }
+
+/* region frames over the die */
+#frames, #outlines { z-index: 3; }
+#cards { z-index: 4; }
+.frame.plain path { fill: none; stroke: var(--ink); stroke-width: 1; opacity: .7; }
+.frame { --fc: var(--accent); }
+.frame path { fill: color-mix(in srgb, var(--fc) 22%, transparent); stroke: var(--fc); stroke-width: 2.6; }
+/* on a black-box beat the frame is the box itself, so it stands more solid */
+/* a piece of a box: a block of its own inside the box, cream under a tint of the box's colour, so it reads as a part and the die shows through only a little */
+.frame.sub path, .frame.sub.solid path { fill: color-mix(in srgb, var(--fc) 28%, var(--cream)); fill-opacity: var(--fo, .6); stroke: var(--fc); stroke-width: 1.4; }
+/* a light fill, so the cells inside keep their own colours; the rim does the marking */
+.frame.solid path { fill: color-mix(in srgb, var(--fc) 14%, transparent); stroke-width: 3.5; }
+/* the wire count on an arrow of the black-box view */
+.wcnt { font: 400 13px var(--mono); letter-spacing: .04em; fill: var(--ink); text-anchor: middle;
+        paint-order: stroke; stroke: var(--cream); stroke-width: 3px; stroke-linejoin: round; }
+/* the box's mark is bare text with a white outline; no card */
+.frame text { font: 400 1rem var(--mono); letter-spacing: .1em; text-transform: uppercase; fill: var(--fc);
+              paint-order: stroke; stroke: var(--ol, #fff); stroke-width: var(--ow, 3.5px); stroke-linejoin: round; }
+.frame .lb { display: none; }
+
+/* the input grid */
+.gc { fill: var(--pane); stroke: var(--grey-2); stroke-width: 1; }
+.gc.zero { fill: var(--cream); }
+.gc.on { fill: var(--accent); stroke: var(--accent); }
+
+/* a makeshift editor window */
+.code { margin: 0 0 .8rem; padding: .6rem .8rem; background: var(--cream); border: 1px solid var(--grey-2);
+        border-radius: 4px; font: 400 .66rem/1.6 var(--mono); color: var(--ink-2); white-space: pre;
+        overflow-x: auto; }
+.code .ln { display: block; padding: 0 .3rem; border-radius: 2px; }
+.code .ln.hot { background: var(--accent-soft); color: var(--ink); }
+
+/* a region as a black box */
+.io .chip { display: inline-block; background: var(--rc, var(--accent)); color: var(--cream);
+            padding: .15rem .4rem; border-radius: 2px; margin-right: .3rem; }
+.iot { border-collapse: collapse; font: 400 .68rem/1.5 var(--mono); color: var(--ink); width: 100%; }
+.iot th { text-align: left; padding: .2rem .8rem .2rem 0; letter-spacing: .12em; text-transform: uppercase;
+          color: var(--ink-2); font-weight: 400; width: 5rem; vertical-align: top; }
+.iot td { padding: .2rem 0; }
+/* the region graph, drawn over the die: an orb on each region and an arrow for
+   every net that crosses between two of them */
+#wires { position: fixed; inset: 0; width: 100vw; height: 100vh;
+         pointer-events: none; z-index: 4; transition: opacity .2s linear; }
+/* every edge is a thin ink line; weight is the wire count */
+.warc { fill: none; stroke: var(--ink); opacity: .8; }
+/* the clock is inferred, not traced, and is not dataflow: dashed, thin, and
+   behind everything that carries a value */
+.warc.clk { stroke-dasharray: 5 4; }
+.wpin.clk circle { stroke-dasharray: 2 2; }
+.worb circle { fill: var(--fc); stroke: var(--ink); stroke-width: 1.4; }
+.worb .wid { font: 700 16px var(--mono); letter-spacing: .03em; fill: var(--tc, var(--pane));
+              text-anchor: middle; }
+.worb .wnm { font: 400 17px var(--mono); letter-spacing: .06em; fill: var(--fc);
+             paint-order: stroke; stroke: var(--ol, #fff); stroke-width: var(--ow, 3.5px); stroke-linejoin: round; }
+             stroke-linejoin: round; }
+.wpin circle { fill: var(--pane); stroke: var(--ink-2); stroke-width: 1.4; }
+/* the card under every label drawn over the die */
+/* no cards: every label over the die is bare text with a white outline, like the box marks */
+.wlb { display: none; }
+/* filler the writer asks for by name: `::: vspace 40` in the script */
+.vspace { width: 100%; }
+.wpin text { font: 400 17px var(--mono); letter-spacing: .08em; fill: var(--ink);
+            paint-order: stroke; stroke: #fff; stroke-width: 3.5px; stroke-linejoin: round; }
+
+/* the netlist as a flow: a dot per gate, a line per wire, inputs left and
+   outputs right, drawn over the pane the way the region graph is */
+#flow { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 4;
+        transition: opacity .2s linear; clip-path: inset(0 0 0 var(--pane-left, 42%)); }
+.fl { fill: none; stroke: var(--ink-2); stroke-width: .55; opacity: .38; }
+.fd { fill: var(--ink-2); }   /* a dot's own colour is set inline, per cell type */
+.fp circle { fill: var(--pane); stroke: var(--ink-2); stroke-width: 1.4; }
+.fp text { font: 400 9px var(--mono); letter-spacing: .08em; fill: var(--ink-2); }
+
+/* edit mode: the source of each section, and comments on its show */
+.edit { margin: 1.2rem 0 0; padding: .7rem .8rem; border: 1.5px dashed var(--grey-1); border-radius: 5px;
+        font: 400 .68rem/1.5 var(--mono); color: var(--ink-2); max-width: var(--measure); }
+.edit-row { display: flex; align-items: center; gap: .6rem; margin: .2rem 0 .35rem; }
+.edit-k { letter-spacing: .12em; text-transform: uppercase; }
+.edit-note { color: var(--accent); }
+.edit button { font: inherit; padding: .1rem .5rem; border: 1px solid var(--grey-1); background: var(--pane);
+               border-radius: 3px; cursor: pointer; }
+.edit textarea { display: block; width: 100%; box-sizing: border-box; resize: vertical; min-height: 3.2rem;
+                 font: 400 .78rem/1.5 var(--mono); color: var(--ink); background: var(--cream);
+                 border: 1px solid var(--grey-2); border-radius: 3px; padding: .5rem .6rem; margin-bottom: .6rem; }
+/* the heading, one line, set in the serif the reader sees it in */
+.edit-title { display: block; width: 100%; box-sizing: border-box;
+              font: 400 .95rem/1.4 var(--serif); color: var(--ink); background: var(--cream);
+              border: 1px solid var(--grey-2); border-radius: 3px;
+              padding: .35rem .6rem; margin-bottom: .6rem; }
+.edit-show { min-height: 2.4rem; background: #fff8e6; }
+.editing .beat, .editing .title { padding-bottom: 6vh; }
+.edit-log { font: 400 .66rem/1.5 var(--mono); color: var(--ink-2); border-top: 1px solid var(--grey-2); padding-top: .4rem; }
+.edit-log .edit-t { color: var(--grey-1); margin-right: .5rem; }
+.edit-done { color: var(--accent); padding-left: .8rem; border-left: 2px solid var(--accent-soft); margin: .2rem 0 .4rem; }
+
+/* colour scheme picker */
+.scheme { position: fixed; top: .8rem; right: 1rem; z-index: 21; font: 400 .62rem/1 var(--mono);
+          letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2);
+          display: flex; align-items: center; gap: .5rem; }
+.scheme select { font: inherit; letter-spacing: .06em; text-transform: none; color: var(--ink);
+                 background: var(--cream); border: 1px solid var(--grey-2); border-radius: 3px;
+                 padding: .25rem .4rem; }
+.sym .bl  { font: 400 8.5px var(--mono); fill: var(--ink); text-anchor: middle; letter-spacing: .02em; }
+/* the symbol key in the prose: symbol, name, meaning. The meaning wraps, and
+   drawSymbolKey measures the wrap in 15px monospace advances, so this size and
+   that one have to agree. */
+.kn { font: 700 15px var(--mono); fill: var(--ink); letter-spacing: .04em; }
+.km { font: 400 15px var(--mono); fill: var(--ink-2); letter-spacing: .01em; }
+.kr { stroke: var(--grey-1); stroke-width: 1; }
+
+/* one net and the pins it lands on, for the netlist beat */
+.nw { fill: none; stroke: var(--accent); stroke-width: 1.8; }
+.nj { fill: var(--accent); }
+.nl { font: 400 15px var(--mono); fill: var(--ink); letter-spacing: .03em; }
+/* figure text at the body's own size, for the Act III figures */
+.fx { font: 400 17px var(--mono); fill: var(--ink); letter-spacing: .03em; }
+.tl { fill: none; stroke: var(--ink); stroke-width: 1.8; stroke-linejoin: round; }
+.tq { stroke: var(--accent); stroke-width: 2.2; }
+.np { font: 400 13px var(--mono); fill: var(--accent); letter-spacing: .06em; }
+.nn { font: 400 13px var(--mono); fill: var(--ink-2); letter-spacing: .06em; }
+.grid .g, .grid .gl, .grid .bub { stroke: var(--ink-2); }
+.wv { fill: none; stroke: var(--ink-2); stroke-width: 1.3; }
+.wv-them { stroke: var(--grey-1); stroke-width: 2.6; }
+.wv-us { stroke: var(--accent); stroke-width: 1.2; }
+.wl { fill: var(--ink-2); }
+.wo { fill: var(--accent); }
+.wc { stroke: var(--accent); stroke-width: 1.2; }
+.grid .nm { font: 400 9px var(--mono); fill: var(--ink-2); text-anchor: middle; letter-spacing: .06em; }
+
+/* A label sits ON the chip, so it needs a ground of its own: an opaque one,
+   and an outline. Translucent, the routing under it reads through the text
+   and the label is legible on some parts of the die and not others. */
+.tag { position: absolute; font: 400 1rem/1 var(--mono); letter-spacing: .07em;
+       color: var(--ink); background: var(--cream); border: 1px solid var(--grey-1);
+       padding: .2rem .34rem; border-radius: 2px;
+       transform: translate(0, -50%); white-space: nowrap; }
+.tag.port { color: var(--accent); font-weight: 700; letter-spacing: .1em; border-color: var(--accent); }
+.tag.pin  { color: var(--accent); border-color: var(--accent); }
+/* the line a hovered layer says about itself */
+.tag.hover { transform: none; max-width: 22rem; white-space: normal; line-height: 1.35; z-index: 30; pointer-events: none; }
+
+/* panels: a full cover, or a strip along the bottom */
+.cover, .strip { opacity: 0; transition: opacity .25s linear; }
+.cover.on, .strip.on { opacity: 1; }
+
+.cover { position: absolute; inset: 0; display: grid; place-items: center;
+         background: var(--pane); z-index: 4; }
+.cover svg { width: min(74%, 640px); height: auto; }
+
+.strip { position: absolute; left: 2rem; right: 2rem; bottom: 2rem; z-index: 4;
+         background: color-mix(in srgb, var(--pane) 95%, transparent);
+         border: 1.5px solid var(--grey-2); border-radius: 5px; padding: 1rem 1.2rem; }
+.strip svg { display: block; width: 100%; height: auto; }
+/* a panel that is taller than it is wide: fit it to the pane's height, top to
+   bottom, and let it be only as wide as that makes it. Without this the map
+   was sized by the strip's width and ran off the top of the pane. */
+.strip.fit { top: 2rem; display: flex; flex-direction: column; }
+.strip.fit > div[data-map] { flex: 1; min-height: 0; }
+.strip.fit svg { width: auto; height: 100%; margin: 0 auto; max-width: 100%; }
+.strip .cap { font: 400 .62rem/1.4 var(--mono); letter-spacing: .1em;
+              text-transform: uppercase; color: var(--ink-2); margin-bottom: .7rem; }
+.wm { position: absolute; right: 1rem; bottom: .7rem;
+      font: 400 .58rem/1 var(--mono); letter-spacing: .12em; color: var(--grey-1); }
+
+/* ---------- arrows, prose to pad ---------- */
+
+#arrows { position: fixed; inset: 0; width: 100vw; height: 100vh;
+          pointer-events: none; z-index: 5; }
+.arrow { fill: none; stroke: var(--accent); stroke-width: 1.2; opacity: 0;
+         transition: opacity .18s linear; }
+
+/* ---------- narrow: say so, rather than pretend ----------
+
+   The piece is a desktop format. It is two columns by construction: prose on
+   one side and a chip that moves with it on the other, with lines drawn from
+   a word in the text to a pad on the chip. Stacked on a phone it is not a
+   smaller version of that, it is a different and worse thing. So below the
+   width where the two columns work, the page says so and stops. */
+
+@media (max-width: 900px), (orientation: portrait) and (max-width: 1100px) {
+  .spread, .scheme, #arrows, #symbols, #frames, #wires, #flow, #sketch, #outlines, #cards { display: none; }
+  body::before {
+    content: "This piece needs a wider window. It is two columns: the writing on one side, the chip on the other, moving with it. Open it on a desktop.";
+    display: block; max-width: 26rem; margin: 30vh auto; padding: 0 2rem;
+    font: 400 17px/1.5 var(--serif); color: var(--ink-2); text-align: left;
+  }
+}
+
+/* one table: the puzzle's conditions, beside the beat that states them */
+.prose table { width: 100%; border-collapse: collapse; margin: 1.6rem 0; font-size: .94rem; }
+.prose th, .prose td { text-align: left; padding: .45rem .6rem .45rem 0; vertical-align: top;
+                       border-bottom: 1px solid var(--grey-2); }
+.prose th { font: 400 .72rem/1 var(--mono); letter-spacing: .08em; text-transform: uppercase;
+            color: var(--ink-2); border-bottom-color: var(--ink-2); }
+.prose td:first-child { font-family: var(--mono); font-size: .82rem; white-space: nowrap;
+                        padding-right: 1.2rem; color: var(--ink); }
+
+/* the five conditions, floating in the pane */
+.rx { stroke: var(--ink-2); stroke-width: 1.2; }
+.rl { font: 400 13px var(--serif); fill: var(--ink-2); }
+.rn { font: 400 30px var(--mono); fill: var(--ink); }
+.rbg { fill: var(--pane); stroke: var(--grey-2); stroke-opacity: .35; stroke-width: 1; }
+.rk  { filter: drop-shadow(0 3px 7px rgba(0, 0, 0, .13)); }
+.rm { font: 400 14px var(--mono); fill: var(--ink); letter-spacing: 1px; }

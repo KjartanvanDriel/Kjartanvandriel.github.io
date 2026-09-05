@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reverse engineering an ASIC — Per aspera ad astra</title>
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="spread">
+
+<!-- ============================= prose ============================= -->
+<main class="prose">
+  <nav class="toc"><ol><li><a class="part" href="#a1"><span class="n">1</span>What is GDS?</a></li><li><a class="part" href="#a2"><span class="n">2</span>Recovering the circuit</a></li><li><a class="part" href="#a3"><span class="n">3</span>Inferring the circuit</a></li></ol></nav>
+  <header class="title" id="title">
+    <p class="kicker">Kjartan van Driel &amp; Leander Post</p>
+    <h1>Reverse engineering an ASIC</h1>
+    <p class="dek">Per aspera ad astra</p>
+    <p>Jane Street recently released <a href="https://blog.janestreet.com/can-you-reverse-engineer-an-asic/">a puzzle</a> where the goal is to reverse engineer an ASIC chip, figure out what it does, and submit a solution. I urged my friend Leander to join me and see if we could figure it out. Along the way, it dawned on me that the road to the solution could be illustrated in particularly pretty terms, so here is my attempt at that.</p>
+    <p>This is intended as a solution, particularly for those who read the challenge and decided they couldn't quite fit it into their schedule. It's supposed to convey the central ideas you would need to arrive at a solution.</p>
+  </header>
+  <header class="title act" id="a1">
+    <p class="kicker">part I of three</p>
+    <h1>What is GDS?</h1>
+    <p class="lede">First, we have to open a file. Surely this is the easy bit.</p>
+  </header>
+  <section class="beat" id="a1-files">
+    <h2>Two files</h2>
+    <p>Excluding the warmup puzzle -- <em>which you should for sure try</em> -- the puzzle consists of just two files: <em>puzzle.gds</em> and <em>example_inputs.vcd</em>. The puzzle centres on the <em>Graphic Data System</em>, or GDS file. The example inputs are there as a simple test case: one input, and the output the chip should produce for it.</p>
+  </section>
+  <section class="beat" id="a1-layers">
+    <h2>Layers</h2>
+    <p>Opening the GDS file in a dedicated program like KLayout, we can immediately see some of its structure. It describes a layout: polygons of different types, indicated by their layer. It also contains annotations, which make the entire file look like a mess when you first open it.</p>
+  </section>
+  <section class="beat" id="a1-cells">
+    <h2>Cells</h2>
+    <p>The GDS file format allows you to group polygons into cells. Such cells can be defined once and placed many times. They typically define logic gates, which in turn make up registers, computational units and so forth. Such a hierarchy makes it more manageable to design a chip. Though again, this hierarchy is typically the result of a higher-level description in Verilog, which is ultimately translated into this layout. The cell boundaries give us some of that structure to work with, even though we don't have the original Verilog.</p>
+  </section>
+  <section class="beat" id="a1-floorplan">
+    <h2>Just a layout</h2>
+    <p>Whilst a GDS defines a layout, on its own it says very little about what that layout actually means. Even the depiction on the right is somewhat suggestive, since we've already given the layers colours and thicknesses. Looking at the file alone, we wouldn't know which of those layers were metal, which were silicon, or how a fab would turn them into a working chip.</p>
+    <p>To make sense of them, we need to know the manufacturing process the chip was designed for. Each process has its own conventions for what the layer numbers mean. These are documented in a <em>process design kit</em>, or PDK, along with the rules for how the different materials can be used. So before we can read much of the circuit, we need to find out which process we're looking at.</p>
+  </section>
+  <section class="beat" id="a1-library">
+    <h2>Finding the process</h2>
+    <p>Fortunately, the names of the logic cells give us a fairly direct clue. They start with <code>sky130_fd_sc_hd__</code>, which identifies a standard-cell library for the SkyWater 130 nm process. A standard-cell library is a collection of ready-made components, such as logic gates and flip-flops, that a chip designer can use without having to draw each one from transistors.</p>
+    <p>The documentation for this process and library is public, so we can look up both what the layers mean and what the cells are supposed to do. Which is quite a bit more convenient than having to work all of that out from the polygons ourselves.</p>
+  </section>
+  <section class="beat" id="a1-layer-tour">
+    <h2>The layers</h2>
+    <p>With that documentation, we can start putting names to the layers. Near the bottom, <em>nwell</em>, <em>diff</em> and <em>poly</em> define the parts of the transistors. We'll look at those in a moment. Just above them is <em>li1</em>, short for local interconnect, which joins transistors together within a cell.</p>
+    <p>Above that are five metal layers, <em>met1</em> through <em>met5</em>, for wiring the cells together and carrying signals across the chip. Having several layers lets wires cross without touching. To connect a wire on one layer to a wire on the next, there has to be a connection through the insulating material between them, called a <em>via</em>. The cut layers, the ones ending in <code>/44</code>, specify where those connections go.</p>
+    <p>This distinction will matter when we try to follow the wires. Two polygons can overlap in the top-down view without being electrically connected, so we need to keep track of their layers as well as their shapes.</p>
+    <figure id="xsec">
+      <figcaption>A cross-section through the layers, with connections between them. The thicknesses and spacing are adjusted to make the structure easier to see. They aren't to scale.</figcaption>
+    </figure>
+  </section>
+  <section class="beat" id="a1-ports">
+    <h2>Inputs and outputs</h2>
+    <p>The file also contains text labels on some of its layers. At the top level, these name the inputs and outputs of the chip, so we can already get some idea of how we're supposed to interact with it.</p>
+    <p>On the left we have <code>clk</code>, the clock, along with <code>rst_n</code>, <code>enable</code> and <code>I</code>. On the right are the eight bits of <code>O</code> and a separate <code>success</code> output. The puzzle asks us to find an input that makes <code>success</code> go high. We don't yet know what that input should be, but at least we know where to send it and where to check the result.</p>
+  </section>
+  <section class="beat" id="a1-pins">
+    <h2>The pins of a cell</h2>
+    <p>If we zoom into one of the logic cells, we find another set of labels. These tell us where the cell's own inputs and outputs connect to the wiring around it. The cell we're looking at is an XOR gate, with two inputs, <span class="pin" data-pin="xor2_2:A">A</span> and <span class="pin" data-pin="xor2_2:B">B</span>, and an output, <span class="pin" data-pin="xor2_2:X">X</span>.</p>
+    <p>There are also <span class="pin" data-pin="xor2_2:VPWR">VPWR</span> and <span class="pin" data-pin="xor2_2:VGND">VGND</span>, the power and ground connections. These run along the top and bottom of the cell, so neighbouring cells can share them. The labels themselves are just annotations. It's the conducting material underneath each label that forms the connection. Later, we can use those positions to work out how the gates are wired together.</p>
+  </section>
+  <section class="beat" id="a1-transistor">
+    <h2>A transistor</h2>
+    <p>The logic gates we've been looking at are made from transistors. For our purposes, we can think of a transistor as an electrically controlled switch: the voltage on one terminal, called the <em>gate</em>, determines whether current can flow between the other two, the <em>source</em> and <em>drain</em>.</p>
+    <p>In the layout, we can recognise one where a strip of polysilicon crosses a diffusion region. The polysilicon forms the gate, separated from the silicon underneath by a thin insulating layer. The diffusion on either side forms the source and drain. So although these shapes overlap in the drawing, the gate isn't directly connected to the material underneath it.</p>
+    <figure class="inl">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 248">
+  <defs>
+    <pattern id="ox" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="6" stroke="var(--grey-1)" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect x="20" y="118" width="520" height="74" fill="var(--pane)" stroke="var(--grey-2)"/>
+  <text x="28" y="184" font-family="ui-monospace,Menlo,monospace" font-size="15" fill="var(--ink-2)">p substrate</text>
+  <rect x="20" y="96" width="520" height="22" fill="url(#ox)" opacity=".6"/>
+  <!-- The depletion region: carriers pushed out of the p body around the two
+       junctions and under the gate. Without it the inversion layer is a fact
+       with no cause, which is the half of the picture textbooks never omit. -->
+  <path d="M118 112 L118 160 L442 160 L442 112 L430 112 L430 146 L320 146
+           L320 113 L240 113 L240 146 L130 146 L130 112 Z"
+        fill="var(--accent)" fill-opacity=".10" stroke="var(--accent)"
+        stroke-width="1" stroke-dasharray="4 3" opacity=".75"/>
+  <rect x="130" y="112" width="110" height="34" fill="var(--layer-1)" stroke="var(--ink-3d)"/>
+  <rect x="320" y="112" width="110" height="34" fill="var(--layer-1)" stroke="var(--ink-3d)"/>
+  <rect x="240" y="108" width="80" height="5" fill="var(--cream)" stroke="var(--ink-3d)" stroke-width=".8"/>
+  <rect x="238" y="76" width="84" height="32" fill="var(--layer-2)" stroke="var(--ink-3d)"/>
+  <path d="M240 113 L320 113" stroke="var(--accent)" stroke-width="2.4" stroke-dasharray="5 3"/>
+  <g stroke="var(--ink)" stroke-width="1.6" fill="none">
+    <path d="M185 112v-34h-60"/><path d="M375 112v-34h60"/><path d="M280 76v-30"/>
+  </g>
+  <g fill="var(--ink)"><circle cx="185" cy="112" r="2.6"/><circle cx="375" cy="112" r="2.6"/></g>
+  <g font-family="ui-monospace,Menlo,monospace" font-size="15" fill="var(--ink-2)">
+    <text x="138" y="134">n+ source</text><text x="328" y="134">n+ drain</text>
+    <text x="330" y="176">depletion region</text>
+    <text x="280" y="97" text-anchor="middle" fill="var(--cream)">poly gate</text>
+    <text x="326" y="105">oxide</text>
+    <text x="60" y="74" text-anchor="middle">source</text>
+    <text x="500" y="74" text-anchor="middle">drain</text>
+    <text x="280" y="42" text-anchor="middle">gate</text>
+    <text x="280" y="128" text-anchor="middle" fill="var(--accent)">channel</text>
+  </g>
+  <text x="20" y="212" font-family="ui-monospace,Menlo,monospace" font-size="15" fill="var(--ink)">A voltage on the gate pulls a channel together under the</text>
+  <text x="20" y="234" font-family="ui-monospace,Menlo,monospace" font-size="15" fill="var(--ink)">oxide, and current runs source to drain.</text>
+</svg>
+
+      <figcaption>A transistor in cross-section: the gate sits above a thin insulating layer, with the source and drain on either side.</figcaption>
+    </figure>
+    <p>There are two kinds of transistor in these cells, nMOS and pMOS. Roughly speaking, an nMOS conducts when its gate is high, while a pMOS conducts when its gate is low. This is again a simplification, but it's enough to follow how they're used here. By combining the two, we can make a circuit that connects its output to either power or ground depending on its inputs.</p>
+    <figure class="inl">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 314">
+  <g stroke="var(--ink)" stroke-width="2" fill="none" stroke-linecap="round">
+    <path d="M150 26v92M182 44v56"/>
+    <path d="M182 54h52M182 90h52M234 54v-26h40M234 90v26h40"/>
+    <path d="M150 72h-46"/>
+  </g>
+  <g fill="var(--ink)"><circle cx="274" cy="28" r="3.5"/><circle cx="274" cy="116" r="3.5"/><circle cx="104" cy="72" r="3.5"/></g>
+  <g font-family="ui-monospace,Menlo,monospace" font-size="15" fill="var(--ink-2)">
+    <text x="94" y="66" text-anchor="end">gate</text>
+    <text x="286" y="33">drain</text><text x="286" y="121">source</text>
+  </g>
+  <text x="150" y="150" font-family="ui-monospace,Menlo,monospace" font-size="15" fill="var(--ink)">nMOS: conducts when the gate is high</text>
+
+  <g stroke="var(--ink)" stroke-width="2" fill="none" stroke-linecap="round">
+    <path d="M150 190v92M182 208v56"/>
+    <path d="M182 218h52M182 254h52M234 218v-26h40M234 254v26h40"/>
+    <path d="M150 236h-24"/>
+    <circle cx="118" cy="236" r="7" fill="var(--cream)"/>
+    <path d="M111 236h-7"/>
+  </g>
+  <g fill="var(--ink)"><circle cx="274" cy="192" r="3.5"/><circle cx="274" cy="280" r="3.5"/><circle cx="104" cy="236" r="3.5"/></g>
+  <g font-family="ui-monospace,Menlo,monospace" font-size="15" fill="var(--ink-2)">
+    <text x="94" y="230" text-anchor="end">gate</text>
+    <text x="286" y="197">source</text><text x="286" y="285">drain</text>
+  </g>
+  <text x="150" y="300" font-family="ui-monospace,Menlo,monospace" font-size="15" fill="var(--ink)">pMOS: conducts when the gate is low</text>
+</svg>
+
+      <figcaption>The symbols for nMOS and pMOS transistors. The small circle on the pMOS gate marks that it conducts when the gate is low.</figcaption>
+    </figure>
+    <p>The example on the right picks out one transistor from the cell. This helps us understand what the shapes in the GDS represent. For the analysis, though, we can work with the logic gates those transistors form.</p>
+  </section>
+  <section class="beat" id="a1-xor">
+    <h2>XOR gate</h2>
+    <p>An XOR gate is a simple example.<a class="fn" href="#n2" id="r2">2</a> It has two inputs, <code>A</code> and <code>B</code>, and one output, <code>X</code>. If the inputs differ, the output is one. If they're the same, it's zero. We can treat the whole cell as this one operation, regardless of how it's implemented internally.</p>
+    <p>In the layout, the labels <code>A</code>, <code>B</code> and <code>X</code> mark its input and output connections on <em>li1</em>. So we know what the gate does and where it connects. Given the values on the two input wires, we can calculate the value on the output wire and pass it on to whichever gates it connects to. That's how we'll use these cells to simulate the chip.</p>
+    <figure id="xor-schematic-fig">
+      <figcaption>The XOR schematic over a faint copy of its layout. The wire colours match the ones on the right.</figcaption>
+    </figure>
+  </section>
+  <section class="beat" id="a1-flipflop">
+    <h2>Flip-flops</h2>
+    <p>Most cells are more or less immediate: their output is some function of whatever happens to be on their inputs right now. A flip-flop is slightly different, since it lets the circuit remember a value instead.</p>
+    <p>It has a data input <code>D</code>, an output <code>Q</code>, and, importantly, a clock input <code>CLK</code>. On the edge where the clock goes from low to high, whatever value is on <code>D</code> becomes the new value of <code>Q</code>, and it then stays there until the next rising edge, regardless of what happens to <code>D</code> in between.</p>
+    <figure id="dff-timing">
+      <figcaption>The clock, the data and the stored bit. <code>Q</code> takes the value of <code>D</code> only on the rising edge of <code>CLK</code>, and holds it until the next one.</figcaption>
+    </figure>
+    <p>This is throwing quite a bit of nuance out of the window. Real flip-flops have setup and hold times, the clock does not arrive everywhere at exactly the same instant, and none of these transitions are really instantaneous. Though for what we're trying to do, none of that matters very much. We only care about the logical behaviour of the chip, so we can treat a rising clock edge as one precise moment where every flip-flop updates.</p>
+    <p>The flip-flop shown here also has <code>RESET_B</code>, an active-low reset. Pulling it low forces <code>Q</code> to zero without waiting for a clock edge.</p>
+    <p>There are 92 flip-flops on the chip. So instead of thinking about the circuit continuously changing over time, we can think of it as having 92 bits of state, with the clock deciding when those bits update during normal operation.</p>
+  </section>
+  <section class="beat" id="a1-buffer">
+    <h2>Clock buffers</h2>
+    <p>Buffers are much less interesting. They are simply there to transmit the clock signal over large distances. Physically, they are necessary, since a small gate cannot necessarily drive a long wire or many other gates quickly enough, so buffers are placed in between to help drive the signal.</p>
+    <p>For us, this means they can mostly be ignored. We just need to keep track of the clock.</p>
+  </section>
+  <section class="beat" id="a1-close">
+    <h2>Patchwork of components</h2>
+    <p>If we colour the cells by the kind of component they implement, we can see how much of the chip is made from the same few building blocks. The layout is still fairly overwhelming, but we now have some idea of what we're looking at.</p>
+    <p>To work out what the whole chip does, we need to know how those components are connected. That means following the wires between them, which is what we'll do in part two.</p>
+  </section>
+  <section class="notes" id="a1-notes">
+    <h2>Notes</h2>
+    <ol>
+      <li id="n2" value="2">Confusingly, “gate” can refer both to the control terminal of a transistor and to a logic gate such as this XOR. The XOR gate is a whole circuit containing several transistors, each with its own gate terminal. <a href="#r2">&#8617;</a></li>
+    </ol>
+  </section>
+  <header class="title act" id="a2">
+    <p class="kicker">part II of three</p>
+    <h1>Recovering the circuit</h1>
+    <p class="lede">Now that we understand how a GDS file defines the layout of a chip die, we need to figure out how to get the circuit back.</p>
+  </header>
+  <section class="beat" id="a2-abstract">
+    <h2>Abstract the cells</h2>
+    <p>For the purposes of the puzzle, we actually don't need to simulate individual transistors. Just as we identified the sky130 process from the cell names, we can also <a href="https://skywater-pdk.readthedocs.io/en/main/contents/libraries/sky130_fd_sc_hd/README.html">infer the cells' functions from their names</a>. Each cell name describes a component: <em>xor2</em> is an XOR gate, <em>and4bb</em> is a four-input AND gate with two inputs inverted, and so on.</p>
+    <figure id="symbol-key">
+      <figcaption></figcaption>
+    </figure>
+    <p>Knowing this, we can treat each cell on the chip as the logical component it represents. The only problem is, we don't directly know which components connect to each other and how.</p>
+  </section>
+  <section class="beat" id="a2-pins">
+    <h2>Where a cell connects</h2>
+    <p>To connect components, we need to know two things: which part of the cell corresponds, logically, to which part of the gate? And which conducting wires connect two cells?</p>
+    <p>The first is answered by the <code>67/5</code> layer, otherwise known as <code>li1 label</code>. There we see where the inputs and outputs attach on the cell. For the <code>XOR</code> gate, these are <code>A</code> and <code>B</code> for the inputs and <code>X</code> for the output. Its power and ground labels, <code>VPWR</code> and <code>VGND</code>, are on <code>68/5</code>, the <code>met1 label</code> layer.</p>
+    <p>These labels themselves don't conduct. The signal labels refer to the conducting material underneath them, on layer <code>67/20</code>, the <code>li1 drawing</code>, the lowest wiring layer we use for tracing between cells. Each signal-pin label identifies the <code>li1</code> conductor beneath it. Shapes touching on the same conductor layer are connected. Connections to another layer require the appropriate contact or via.</p>
+  </section>
+  <section class="beat" id="a2-conductors">
+    <h2>Connecting components</h2>
+    <p>Naturally, two cells connect if there is a conducting path between them, and what counts as a conductor is defined by the technology we're using to fabricate the chip. For sky130, we again refer to the diagram. The <code>met</code> -- as well as the <code>li1</code> -- layers conduct over distances. These layers are connected by vias, which conduct from layer to layer.</p>
+    <figure id="xsec2">
+      <figcaption>Shapes touching on the same conductor layer are connected. A contact or via joins adjacent layers. The drawing is schematic and not to scale.</figcaption>
+    </figure>
+  </section>
+  <section class="beat" id="a2-trace">
+    <h2>Following the wires</h2>
+    <p>Then we simply follow the connected conductors to trace each wire.</p>
+    <p>Putting everything together and keeping track of the components gives us the netlist.</p>
+  </section>
+  <section class="beat" id="a2-netlist">
+    <h2>Deriving the netlist</h2>
+    <p>Following these connections gives us a list of the gates and which pins share a wire. This is the <em>netlist</em>. For each gate, we keep its cell type so we know what it does, and for each of its pins, we record which wire it connects to.</p>
+    <p>One wire can connect to several gates, and we need to keep track of the particular pins it reaches. Connecting to a flip-flop's data input <code>D</code> means something quite different from connecting to its clock input <code>CLK</code>, even though both connections reach the same component.</p>
+    <p>With that information, we can draw the circuit as a graph. The components no longer need to sit where they were placed on the die. We can arrange them to make their connections easier to follow. We've also left the power lines out of this view, since we'll treat the supply as fixed when calculating the gates' logical behaviour.</p>
+  </section>
+  <section class="beat" id="a2-buffers">
+    <h2>Ignoring the buffers</h2>
+    <p>We can simplify the clock wiring too. The clock buffers repeat the same logical signal, so we can follow them back to check which clock drives each flip-flop. In this chip, they all update on the same rising edge. For the simulation, we can treat that as one moment when all the stored bits update.</p>
+    <p>Between those updates, the flip-flops hold their current values on <code>Q</code>. Together with the chip inputs, these give us the values we need to start calculating. Whenever we know all the inputs to a gate, we can calculate its output and use that value in the gates connected to it. We keep going until we have the chip outputs and the values on every flip-flop's <code>D</code> input.</p>
+    <p>Then we update all the flip-flops at once, copying each <code>D</code> value to its corresponding <code>Q</code>, unless reset or set is asserted. Doing this together matters, since every new value should have been calculated from the state before the clock tick. We now have the next set of 92 stored bits, and can repeat the calculation for the next cycle. That's enough to run the circuit.</p>
+  </section>
+  <section class="beat" id="a2-testing">
+    <h2>Testing the circuit</h2>
+    <p>We can now go back to the other file we were given, <em>example_inputs.vcd</em>, and check whether our simulator actually works. A VCD file records how signals change over time: it starts by listing their names, then gives timestamps and the values that change at each one. In this case, it contains both the inputs sent to the chip and the outputs it produced, so we have something to compare against.</p>
+    <p>The example starts by holding <code>rst_n</code> low for three clock cycles to reset the chip. It then sets <code>enable</code> high and sends 121 bits through <code>I</code>, one per cycle. Once those are sent, <code>enable</code> goes low and we can read the output on <code>O</code>. We can follow exactly the same sequence in our simulator and check whether <code>O</code> and <code>success</code> agree with the recording. Across the whole recording, all 730 output-bit values we can compare match. This doesn't prove we've recovered every connection correctly, but it gives us some confidence that the circuit we're simulating behaves as it should.</p>
+    <p>The output on <code>O</code> is eight bits wide, and interpreting those bytes as ASCII gives us <code>TRY AGAIN</code>. Which is reassuring as far as the simulator goes, though it doesn't tell us very much about what the chip wants us to give it. To find that out, we'll need to look at what the circuit actually does.</p>
+  </section>
+  <header class="title act" id="a3">
+    <p class="kicker">part III of three</p>
+    <h1>Inferring the circuit</h1>
+    <p>Now that we can run the circuit, it's time to figure out what it does. In general, this is difficult because the same function can be implemented with many different arrangements of gates. Trying every possible 121-bit input would mean checking 2^121 combinations.</p>
+    <p>Here, however, we've been given generous hints, namely that the location of each component is meaningful.</p>
+  </header>
+  <section class="beat" id="a3-look">
+    <h2>Look at the layout</h2>
+    <p>We follow the hint and group components by their location. Splitting the output writer from the tip of the long region on the right gives us eleven regions in all. We call the output writer R11, following the hint that it can be considered separately.</p>
+    <p>Among the cells that carry signals, the ones outside these regions are clock buffers. We leave them out of the region diagram, while keeping track of which clock drives the flip-flops.</p>
+    <p>Drawing these boundaries allows us to separate the logic of each region and treat it as its own subcomponent, with its own inputs and outputs.</p>
+    <p>Our analysis can then simply look at the behaviour of each component, possibly looking at its memory bits under different inputs, or perhaps how it's structured within the region.</p>
+    <p>So which region to pick?</p>
+  </section>
+  <section class="beat" id="a3-map">
+    <h2>How the regions connect</h2>
+    <p>To answer this, we should check how regions connect to one another using the netlist. It might be easier to figure out the function of a particular region if we know the meaning of the information travelling to it.</p>
+    <p>Some regions are near the outputs, such as R10, which gives us the <code>success</code> bit, and R11, which writes <code>O</code>. Some have many inputs, outputs, and memory bits, such as R5 and R7, and others have very few inputs, like R1.</p>
+  </section>
+  <section class="beat" id="a3-flow">
+    <h2>Take the die away</h2>
+    <p>We can now draw the regions as a graph and arrange them according to how information passes between them.</p>
+    <p>Next, to see where a region sits in the flow of information, we can look at the <a href="https://royalsocietypublishing.org/doi/10.1098/rsos.201138">trophic level</a> of each component. It's a measure from ecology that roughly defines a position in a food web, from prey to predator. For us, that would mean from input to output.</p>
+    <p>The regions, now drawn with their trophic level in mind, give us an indication of where to start. We see that region 1 is at the bottom of the food chain and tends to feed downstream.</p>
+    <p>We go through the regions in this order, R1 to R11. It gives us a useful direction to follow, even though feedback means some later regions feed earlier ones.</p>
+    <p>Along the way, we will then label the regions more descriptively once we have figured out their function.</p>
+  </section>
+  <section class="beat" id="a3-R1">
+    <h2>R1</h2>
+    <p>The first region, region 1, is not only at the bottom. It's also (not quite) coincidentally the simplest. Other than the clock and reset, it has only one input bit, which comes from region 3.</p>
+    <p>In this case, we can simply check the behaviour of the internal memory and output as we advance the clock, both when its input bit is on and when it's off.</p>
+    <p>The result is simple: the memory bits don't do anything if the input is off. When it's on, we see a transition every tick: 0001, 1000, 1001, 0010, 0011, 1010, 1011, 0100, 0101, 1100, 0000, and back to 0001. Eleven distinct values and then it repeats. Although these values are not exactly counting in binary, that doesn't matter.</p>
+    <p>We also know from the previous section that the input is a total of 121 bits, which is already quite suggestive, so we can visualise the counter's value for each of the 121 bits on an 11 by 11 grid.</p>
+    <figure id="grid-cols">
+      <figcaption>Each cell of the grid coloured by the value the counter holds when that bit arrives. With eleven values, we see eleven columns.</figcaption>
+    </figure>
+    <p>Because it has a unique value for each column of the grid, we'll just call this the column counter.</p>
+    <p>We should also check the output wires. Four of them simply pass on the information stored in the memory. There is also one additional bit that pulses on the tick that completes each round of eleven counts. Three regions read that wire. One of them is R2, up next.</p>
+  </section>
+  <section class="beat" id="a3-R2">
+    <h2>R2</h2>
+    <p>The second region has the same inputs as the column counter, with just the extra bit signalling the end of a round of eleven counts.</p>
+    <p>Again, we observe that if the bit from region 3 is off, nothing happens to the internal state. Equally, we notice that nothing happens as long as the pulse from the column counter is off. It goes on at the end of each round of eleven counts.</p>
+    <p>If both are on, we see that our internal memory state changes, again cycling through 11 different values.</p>
+    <figure id="grid-rows">
+      <figcaption>The same grid, coloured by this counter's value. It holds for eleven bits at a time, so the stripes run the other way.</figcaption>
+    </figure>
+    <p>Visualising this on the grid again, we see the rotated version of the column counter: we've got rows, giving us a row counter. Together, these two give us coordinates to locate a point on the 11x11 grid.</p>
+    <p>Here, the output wires are the same: four bits that pass on the counter's value, and one more bit that goes on when this counter completes its round, at which point we've finished the 121-bit input.</p>
+  </section>
+  <section class="beat" id="a3-R3">
+    <h2>R3</h2>
+    <p>Next comes the small box that feeds both counters. It has a single memory bit. Its inputs are the <code>enable</code> port and the two round pulses, one from each counter, and it has two outputs. One controls whether input bits are accepted. The other tells R10 that the input is complete.</p>
+    <p>The input gate is on while <code>enable</code> is high and fewer than 121 bits have been accepted. The memory bit records when both counters complete the input. After that, another attempt requires a reset.</p>
+    <p>So this wire tells the boxes reading the input whether the bit on <code>I</code> counts right now.</p>
+  </section>
+  <section class="beat" id="a3-R4">
+    <h2>R4</h2>
+    <p>The next box has no memory bits at all. It reads the four bits of the column counter and the four of the row counter, and writes four wires onward.</p>
+    <p>Without memory, the output is a fixed function of the two counters, so we don't even need the clock. We set the counters to each of the 121 positions and read the four wires.</p>
+    <p>They take eleven different values. When we colour the grid by these values, the cells that share a value form a patch, and we get eleven patches of quite different sizes, from four cells to twenty-eight, with rather odd outlines.</p>
+    <figure id="grid-patches">
+      <figcaption>The grid coloured by the four wires. Eleven values, eleven patches, and no two the same shape.</figcaption>
+    </figure>
+    <p>We can describe the result as a lookup table from grid position to patch number. This implementation uses 147 gates. So this box answers one question: which patch is the current cell in? We'll call it the patch map.</p>
+  </section>
+  <section class="beat" id="a3-R5">
+    <h2>R5</h2>
+    <p>Now the first big one, with twenty-two memory bits. Before running anything, we look at how it is wired. If we follow only the wires that stay inside the box, we find that, after leaving out the buffers, its 96 remaining cells fall apart into eleven separate pieces, each with two memory bits and one output wire, and the pieces don't talk to each other at all. So this is eleven copies of one small machine, and we only need to understand one.</p>
+    <p>Each piece reads the column counter, the input gate, and <code>I</code>. Nothing from the row counter, so it must behave the same in every row.</p>
+    <p>We take one piece and run it. Two bits, four states. It only changes while the input gate is on, <code>I</code> is one, and the column counter is at one particular value, and then it goes 00, 01, 10, 11 and stays at 11. Its output wire is on in state 10 only.</p>
+    <figure id="checker-states">
+      <figcaption>One piece as its four states. A one moves it along, a zero leaves it be, at three it stops, and only two says yes.</figcaption>
+    </figure>
+    <p>So each piece counts the ones in one column, stops counting at three, and says yes at exactly two. On the given input the first piece ends at 11, because that column has four ones. Eleven columns, eleven pieces. The eleven yes wires go on together to the big box after next.</p>
+    <p>We'll call this the column count.</p>
+  </section>
+  <section class="beat" id="a3-R6">
+    <h2>R6</h2>
+    <p>The next box is small again, three memory bits. It reads the column counter and its round pulse, the input gate, and <code>I</code>. Two wires go to R8, and one goes to R10.</p>
+    <p>Its cells make four pieces, but three of them are single cells: two OR gates that tell R8 whether the current column is at either edge of the grid, and a tie cell that supplies a constant. The piece that matters has fifteen cells and all three memory bits.</p>
+    <p>Two of the bits count the ones in the current row, stopping at three. The count resets at the end of each row.</p>
+    <p>The third bit is a flag: once on, it stays on. Running it on the given input, it goes on at the last cell of the first row, and that row has three ones. It reads the column counter, so it knows where a row ends. The flag means "a row ended with the wrong number of ones".</p>
+    <p>We'll call this the row check.</p>
+  </section>
+  <section class="beat" id="a3-R7">
+    <h2>R7</h2>
+    <p>This box is the column count once more, with one input swapped: instead of the column counter, it reads the four wires of the patch map. Again eleven pieces that don't talk to each other.</p>
+    <p>Running one of them gives the same four states and the same rule, but it moves on the ones in one patch. Eleven patches, eleven pieces, each saying yes at exactly two. The eleven yes wires go on together to the box after next.</p>
+    <p>We'll call this the patch count.</p>
+  </section>
+  <section class="beat" id="a3-R8">
+    <h2>R8</h2>
+    <p>We can look at this box one piece at a time. It has thirteen memory bits. Following the inner wires gives us two pieces: a small one of four gates with no memory, and a large one of twenty-nine cells holding all thirteen bits. We treat them separately.</p>
+    <p>The small piece is easy. The eleven yes wires of the column count go in, one wire comes out, and the four gates are an AND tree: the output is on only when all eleven are. It means "every column has two", and it goes straight to the second-to-last box.</p>
+    <p>The large piece takes more care. Twelve of its memory bits form a shift register. While the input gate is on, the first stores <code>I</code> and each following bit copies the one before it. They hold the previous twelve accepted input bits.</p>
+    <p>Since the input is an 11 by 11 grid arriving one row at a time, we can give those delays a position. The previous input bit is the cell immediately to the left. Eleven bits back is the cell directly above, whilst ten and twelve bits back are above-right and above-left. These four delays identify the earlier neighbours where they exist. The two signals from R6 mask out comparisons that would cross the left or right edge of the grid.</p>
+    <figure id="window-grid">
+      <figcaption>The previous twelve input bits, with the four neighbour positions used for comparison. Comparisons are masked at the grid edges.</figcaption>
+    </figure>
+    <p>The remaining gates combine those four bits with the arriving <code>I</code>: while the input gate is on, if the new bit is one and any valid earlier neighbour is also one, the thirteenth memory bit is set. It then feeds back into itself, so once this has happened it remains set for the rest of the input.</p>
+    <p>Those four comparisons are also enough. The other four neighbours of a cell are to its right or below it and haven't arrived yet. When they do arrive, the current cell will instead be one of <em>their</em> four previous neighbours. So every adjacent pair only needs to be checked once.</p>
+    <p>The chain is therefore turning our one-dimensional stream back into just enough of a two-dimensional neighbourhood to test whether two ones touch, either by an edge or a corner. We'll call the whole thing the neighbor check.</p>
+  </section>
+  <section class="beat" id="a3-R9">
+    <h2>R9</h2>
+    <p>The next box has eight memory bits and, like the last one, two pieces: four gates with no memory, and thirty-five cells with all eight bits.</p>
+    <p>The four gates are the same AND tree as before, this time over the eleven yes wires of the patch count. "Every patch has two."</p>
+    <p>The other piece counts <code>I</code> while the input gate is on. When we run it, the bits hold on a zero and change on a one. As we follow the changes, no value comes back until 256 ones have gone by. So the eight bits count every one that arrives, in a code that isn't plain binary. One of its output wires is on at a single value only, the one that 22 ones reach. The given input has 38 ones, so this wire is off when the input ends.</p>
+    <p>We'll call this the total count.</p>
+  </section>
+  <section class="beat" id="a3-R10">
+    <h2>R10</h2>
+    <p>Almost at the end, the box that drives the <code>success</code> port. Six wires in, and by now every one of them has a name: the input-complete flag, the row check, the neighbor check, "every column has two", "every patch has two", and the total count. Three signals go to the output writer. One of them also drives the <code>success</code> port.</p>
+    <p>Walking back from the port, we find a memory bit driven by a small network of gates. On the tick after the input is complete, it records whether all the checks passed. It then holds that result until reset. On the given input it stays at zero.</p>
+    <p>So the chip says yes to a grid with two ones in every row, two in every column, two in every patch, no two touching, and 22 in all. This is the success bit.</p>
+    <p>The rectangle also holds two more memory bits. One starts the readout after the input ends. The other records the case where all the counts pass but the neighbour check fails, so the output writer can choose a different message.</p>
+  </section>
+  <section class="beat" id="a3-named">
+    <h2>Everything together</h2>
+    <p>Taking a step back, we've mapped out every region and its function. In sum, the success conditions are:</p>
+    <table>
+      <thead><tr><th>condition</th><th>what the chip checks</th></tr></thead>
+      <tbody>
+        <tr><td>two per row</td><td>every row of eleven cells holds exactly two</td></tr>
+        <tr><td>two per column</td><td>every column holds exactly two</td></tr>
+        <tr><td>two per region</td><td>every one of the eleven patches holds exactly two</td></tr>
+        <tr><td>none touching</td><td>no two share an edge or a corner</td></tr>
+        <tr><td>22 in all</td><td>eleven rows of two, and the total is counted separately</td></tr>
+      </tbody>
+    </table>
+    <p>If you were any more attentive than me, you might already have realised that these are the rules of the two stars game. This is a Star Battle. The chip is a Star Battle validator, and the eleven patches decoded by R4 divide up its board.</p>
+  </section>
+  <section class="beat" id="a3-solve">
+    <h2>Solve it</h2>
+    <p>The board has exactly one solution. Feeding it in gives us <code>(* TWO STARS *)</code> on <code>O</code>, and <code>success</code> goes high.</p>
+  </section>
+  <section class="beat" id="a3-R11">
+    <h2>R11</h2>
+    <p>This is the output writer, the box we were told we could ignore, and it's the biggest of all: twelve memory bits and over two hundred cells. It reads three wires from R10, two from the total count, the input gate and <code>I</code>, and it writes the eight <code>O</code> wires.</p>
+    <p>Here, we can simply check its behaviour under different inputs and see what output it prints.</p>
+  </section>
+  <section class="beat" id="a3-close">
+    <h2>Close</h2>
+    <p>Through sand to the stars.</p>
+    <p>The colours throughout, on the chip and in every figure, are Fabio Crameri's scientific colour maps.<a class="fn" href="#n5" id="r5">5</a></p>
+  </section>
+  <section class="notes" id="a3-notes">
+    <h2>Notes</h2>
+    <ol>
+      <li id="n5" value="5">The palettes are <em>batlow</em> and <em>oslo</em> from Fabio Crameri's Scientific colour maps, which are designed to be perceptually uniform and accessible to readers with common forms of colour-vision deficiency. Crameri, F. (2023), <em>Scientific colour maps</em>, version 8, Zenodo, <a href="https://doi.org/10.5281/zenodo.8035877">doi:10.5281/zenodo.8035877</a>. Crameri, F., Shephard, G. E. and Heron, P. J. (2020), <em>The misuse of colour in science communication</em>, Nature Communications 11, 5444, <a href="https://doi.org/10.1038/s41467-020-19160-7">doi:10.1038/s41467-020-19160-7</a>. They reached this piece through Callum Rollo's <a href="https://github.com/callumrollo/cmcrameri">cmcrameri</a> package, which puts the maps on PyPI. Our thanks to both. <a href="#r5">&#8617;</a></li>
+    </ol>
+  </section>
+</main>
+
+<!-- ============================= chip pane ============================= -->
+<aside class="pane" id="pane">
+  <canvas id="chip"></canvas>
+
+
+  <div class="cover" data-panel="files">
+    <svg viewBox="0 0 420 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g stroke="var(--ink-2)" stroke-width="2">
+        <path d="M40 24h84l30 30v122H40z" fill="var(--cream)"/>
+        <path d="M124 24v30h30"/>
+        <path d="M266 24h84l30 30v122h-114z" fill="var(--cream)"/>
+        <path d="M350 24v30h30"/>
+      </g>
+      <g fill="var(--ink)" font-family="ui-monospace,Menlo,monospace" font-size="13"
+         text-anchor="middle" letter-spacing="1">
+        <text x="97" y="112">puzzle</text><text x="97" y="130">.gds</text>
+        <text x="323" y="112">example</text><text x="323" y="130">_inputs.vcd</text>
+      </g>
+    </svg>
+  </div>
+
+
+  <div class="strip" data-panel="dff">
+    <div class="cap">placeholder — capture on the rising edge</div>
+    <svg viewBox="0 0 560 130" xmlns="http://www.w3.org/2000/svg">
+      <g stroke="var(--grey-2)" stroke-width="1">
+        <path d="M120 12v106M200 12v106M280 12v106M360 12v106M440 12v106"/>
+      </g>
+      <g stroke="var(--ink-2)" stroke-width="1.6" fill="none">
+        <path d="M60 40h20v-22h40v22h40v-22h40v22h40v-22h40v22h40v-22h40v22h40"/>
+        <path d="M60 80h60v-20h120v20h80v-20h140v20h60"/>
+        <path d="M60 116h140v-20h160v20h140v-20h60" stroke="var(--accent)"/>
+      </g>
+      <g font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--ink-2)"
+         letter-spacing="1" text-anchor="end">
+        <text x="50" y="34">CLK</text><text x="50" y="74">D</text>
+        <text x="50" y="110" fill="var(--accent)">Q</text>
+      </g>
+    </svg>
+    <div class="wm">part i / prototype</div>
+  </div>
+
+  <div class="strip" data-panel="buf">
+    <div class="cap">placeholder — X equals A, with drive behind it</div>
+    <svg viewBox="0 0 560 70" xmlns="http://www.w3.org/2000/svg">
+      <g stroke="var(--ink-2)" stroke-width="1.6" fill="none">
+        <path d="M60 35h150"/><path d="M210 12l70 23-70 23z"/><path d="M280 35h220"/>
+      </g>
+      <g font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--ink-2)"
+         letter-spacing="1">
+        <text x="60" y="24">A</text><text x="480" y="24">X</text>
+      </g>
+    </svg>
+    <div class="wm">part i / prototype</div>
+  </div>
+
+
+  <div class="strip" data-panel="netlist">
+    <div class="cap">placeholder — the netlist as a list</div>
+    <svg viewBox="0 0 560 110" xmlns="http://www.w3.org/2000/svg">
+      <g font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--ink-2)" letter-spacing="1">
+        <text x="20" y="24">i12  xor2_2   A=n41  B=n77  X=n102</text>
+        <text x="20" y="44">i13  and2_2   A=n102 B=n9   X=n115</text>
+        <text x="20" y="64">i14  dfrtp_2  D=n115 CLK=n3 RESET_B=n5  Q=n41</text>
+        <text x="20" y="84">...</text>
+        <text x="20" y="104">230 instances · 335 nets · every net one driver</text>
+      </g>
+    </svg>
+    <div class="wm">part ii / prototype</div>
+  </div>
+  <div class="strip" data-panel="buffers">
+    <div class="cap">placeholder — a buffer shorting through</div>
+    <svg viewBox="0 0 560 70" xmlns="http://www.w3.org/2000/svg">
+      <g stroke="var(--ink-2)" stroke-width="1.6" fill="none">
+        <path d="M40 35h120"/><path d="M160 15l50 20-50 20z" stroke="var(--grey-1)"/><path d="M210 35h120"/>
+        <path d="M330 35h60M390 20v30M390 20h60M390 50h60"/>
+      </g>
+      <path d="M160 35h50" stroke="var(--accent)" stroke-width="2" stroke-dasharray="3 3"/>
+    </svg>
+    <div class="wm">part ii / prototype</div>
+  </div>
+  <div class="strip" data-panel="clock">
+    <div class="cap">placeholder — the clock tree, root to every flop</div>
+    <svg viewBox="0 0 560 120" xmlns="http://www.w3.org/2000/svg">
+      <g stroke="var(--ink-2)" stroke-width="1.4" fill="none">
+        <path d="M30 60h60M90 60v-40h60M90 60v40h60M90 60h60"/>
+        <path d="M150 20v-10h60M150 20v10h60M150 60v-10h60M150 60v10h60M150 100v-10h60M150 100v10h60"/>
+      </g>
+      <g font-family="ui-monospace,Menlo,monospace" font-size="9" fill="var(--ink-2)" letter-spacing="1">
+        <text x="20" y="64" text-anchor="end">clk</text>
+        <text x="220" y="14">flop</text><text x="220" y="34">flop</text><text x="220" y="54">flop</text>
+        <text x="220" y="74">flop</text><text x="220" y="94">flop</text><text x="220" y="114">flop</text>
+        <text x="330" y="64">inverters on the way: 0</text>
+      </g>
+    </svg>
+    <div class="wm">part ii / prototype</div>
+  </div>
+  <div class="strip" data-panel="cycle">
+    <div class="cap">placeholder — evaluate, then commit</div>
+    <svg viewBox="0 0 560 90" xmlns="http://www.w3.org/2000/svg">
+      <g stroke="var(--ink-2)" stroke-width="1.4" fill="none">
+        <rect x="30" y="20" width="40" height="50" rx="2"/><rect x="490" y="20" width="40" height="50" rx="2"/>
+        <path d="M70 45h60l30-15h60l30 15h60l30-15h60l30 15h60"/>
+      </g>
+      <g font-family="ui-monospace,Menlo,monospace" font-size="9" fill="var(--ink-2)" letter-spacing="1">
+        <text x="50" y="84" text-anchor="middle">flops</text><text x="510" y="84" text-anchor="middle">flops</text>
+        <text x="280" y="84" text-anchor="middle">combinational logic, left to right</text>
+      </g>
+    </svg>
+    <div class="wm">part ii / prototype</div>
+  </div>
+
+  <div class="strip" data-panel="wave">
+    <div class="cap">the vendor's run, replayed on the traced netlist</div>
+    <svg data-wave="inputs" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="wm">part ii</div>
+  </div>
+  <div class="strip tall" data-panel="protocol">
+    <pre class="code" data-code><span class="ln">initial begin</span>
+<span class="ln" data-phase="reset">  rst_n = 0; enable = 0; I = 0;   repeat (3) @(posedge clk);</span>
+<span class="ln" data-phase="wait">  rst_n = 1;                      @(posedge clk);</span>
+<span class="ln" data-phase="feed">  enable = 1;  for (k = 0; k &lt; 121; k = k + 1) begin I = bits[k]; @(posedge clk); end</span>
+<span class="ln" data-phase="readout">  enable = 0;  repeat (32) begin @(posedge clk); $write("%c", O); end</span>
+<span class="ln">end</span></pre>
+    <svg class="pix" data-input-pixels viewBox="0 0 560 230" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="strip" data-panel="compare">
+    <div class="cap">what the vendor recorded on O, and what our netlist puts there</div>
+    <svg data-wave="compare" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="wm">part ii</div>
+  </div>
+
+  </div>
+  <div class="strip" data-panel="phase">
+    <div class="cap">the two control flops over the run; ten random inputs would give the same lines</div>
+    <svg data-wave="phase" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="wm">part iii</div>
+  </div>
+  <div class="strip tall" data-panel="counters">
+    <div class="cap">the column counter and the row counter, and the 121 bits landing on an 11 by 11 grid</div>
+    <svg data-wave="counters" xmlns="http://www.w3.org/2000/svg"></svg>
+    <svg data-grid2 class="grid2" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="wm">part iii</div>
+  </div>
+  <div class="strip" data-panel="islands">
+    <div class="cap">placeholder — the flop graph of the checker block, falling into 22 islands</div>
+    <svg viewBox="0 0 560 120" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="558" height="118" fill="none" stroke="var(--grey-2)" stroke-dasharray="4 4"/><text x="280.0" y="64.0" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--ink-2)" letter-spacing="1">22 two-flop components, no edges between them</text></svg>
+    <div class="wm">part iii</div>
+  </div>
+  <div class="strip" data-panel="automaton">
+    <div class="cap">placeholder — one checker's transition table, exactly extracted</div>
+    <svg viewBox="0 0 560 120" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="558" height="118" fill="none" stroke="var(--grey-2)" stroke-dasharray="4 4"/><text x="280.0" y="64.0" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--ink-2)" letter-spacing="1">4 states · 0 holds · 1 advances · saturates at 3 · wants 2</text></svg>
+    <div class="wm">part iii</div>
+  </div>
+  <div class="strip" data-panel="gridcol">
+    <div class="cap">placeholder — one column of the grid, the checker advancing as ones land in it</div>
+    <svg viewBox="0 0 560 120" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="558" height="118" fill="none" stroke="var(--grey-2)" stroke-dasharray="4 4"/><text x="280.0" y="64.0" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--ink-2)" letter-spacing="1">11 x 11 grid, one column lit</text></svg>
+    <div class="wm">part iii</div>
+  </div>
+  <div class="strip" data-panel="regionmap">
+    <div class="cap">placeholder — eleven irregular regions tiling the grid</div>
+    <svg viewBox="0 0 560 120" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="558" height="118" fill="none" stroke="var(--grey-2)" stroke-dasharray="4 4"/><text x="280.0" y="64.0" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--ink-2)" letter-spacing="1">11 regions, each of 11 cells, C(n,2)/2^n accepting</text></svg>
+    <div class="wm">part iii</div>
+  </div>
+  <div class="strip" data-panel="window">
+    <div class="cap">placeholder — a 12-bit window sliding over the grid; the row rule and the adjacency rule</div>
+    <svg viewBox="0 0 560 120" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="558" height="118" fill="none" stroke="var(--grey-2)" stroke-dasharray="4 4"/><text x="280.0" y="64.0" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--ink-2)" letter-spacing="1">left, above-left, above, above-right</text></svg>
+    <div class="wm">part iii</div>
+  </div>
+  <div class="strip" data-panel="cycle256">
+    <div class="cap">placeholder — the star counter's 256 states: I=0 identity, I=1 one loop</div>
+    <svg viewBox="0 0 560 120" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="558" height="118" fill="none" stroke="var(--grey-2)" stroke-dasharray="4 4"/><text x="280.0" y="64.0" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--ink-2)" letter-spacing="1">accepting state at position 22</text></svg>
+    <div class="wm">part iii</div>
+  </div>
+  <div class="strip" data-panel="starbattle">
+    <div class="cap">placeholder — the board</div>
+    <svg viewBox="0 0 560 140" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="558" height="138" fill="none" stroke="var(--grey-2)" stroke-dasharray="4 4"/><text x="280.0" y="74.0" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--ink-2)" letter-spacing="1">two per row, two per column, two per region, none touching</text></svg>
+    <div class="wm">part iii</div>
+  </div>
+  <div class="strip" data-panel="solution">
+    <div class="cap">placeholder — the one solution, star by star, and success going high</div>
+    <svg viewBox="0 0 560 140" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="1" width="558" height="138" fill="none" stroke="var(--grey-2)" stroke-dasharray="4 4"/><text x="280.0" y="74.0" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--ink-2)" letter-spacing="1">(* TWO STARS *)</text></svg>
+    <div class="wm">part iii</div>
+  </div>
+  <div class="strip" data-panel="morse">
+    <div class="cap">the strip under the die</div>
+    <svg viewBox="0 0 560 60" xmlns="http://www.w3.org/2000/svg"><g font-family="ui-monospace,Menlo,monospace" font-size="10" fill="var(--ink-2)" letter-spacing="1"><text x="20" y="26">.--. . .-.   .- .-. . -. .- --   .- -..   .- ... - .-. .-</text><text x="20" y="50">PER ARENAM AD ASTRA</text></g></svg>
+    <div class="wm">part iii</div>
+  </div>
+  <div class="sidebar" id="sidebar">
+    <span class="pill" data-pill>title</span>
+  </div>
+</aside>
+
+</div>
+
+<svg id="arrows" aria-hidden="true"></svg>
+<svg id="symbols" aria-hidden="true"></svg>
+<svg id="frames" aria-hidden="true"></svg>
+<svg id="wires" aria-hidden="true"></svg>
+<svg id="flow" aria-hidden="true"></svg>
+<svg id="sketch" aria-hidden="true"></svg>
+<svg id="outlines" aria-hidden="true"></svg>
+<svg id="cards" aria-hidden="true"></svg>
+<div class="scheme"><span>scheme</span>
+  <select data-scheme-picker aria-label="colour scheme">
+    <option value="oslo">oslo</option>
+    <option value="batlow">batlow</option>
+    <option value="davos">davos</option>
+    <option value="lajolla">lajolla</option>
+    <option value="turku">turku</option>
+  </select>
+</div>
+<div id="tags" aria-hidden="true"></div>
+
+<script src="lib/three.min.js"></script>
+<script type="module">
+  // On localhost, refetch every module before importing. The dev server the
+  // preview harness spawns is python's http.server, which sends no
+  // Cache-Control, so the browser heuristically caches ES modules and an edit
+  // silently does not load. Elsewhere this is a handful of 304s.
+  if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
+    await Promise.all(["main.js", "src/theme.js", "src/subjects.js", "src/marks.js", "src/overlays.js",
+      "src/engine.js", "src/devpanel.js", "acts/act1.js", "acts/act2.js", "style.css", "theme.css"]
+      .map(u => fetch(u, { cache: "reload" })));
+  }
+  await import("./main.js?v=" + Date.now());
+</script>
+</body>
+</html>

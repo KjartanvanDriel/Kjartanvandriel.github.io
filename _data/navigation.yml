@@ -13,3 +13,6 @@ main:
     
   - title: "Talks"
     url: /talks/
+
+  - title: "ASIC"
+    url: /asic/

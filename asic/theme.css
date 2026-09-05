@@ -1,0 +1,240 @@
+/* The colour scheme, in one place.
+
+   Everything reads from here: the prose, the placeholder figures, and the
+   chip pane, which pulls these values out with getComputedStyle at boot
+   instead of keeping a second copy in JavaScript.
+
+   Warm greys and one accent hue for the page; the oslo ramp for the chip.
+   Swapping the palette means editing --layer-0..14 and --accent, nothing else. */
+
+:root {
+  /* --- page ------------------------------------------------------------ */
+  --cream:  #fdfaf3;          /* prose ground */
+  --pane:   #f2ede2;          /* chip pane, one step warmer and deeper */
+  --ink:    #191612;          /* near-black, warm */
+  --ink-2:  #4a453d;          /* secondary text */
+  --accent: #2c5f96;          /* oslo blue: links, markers, hover fills */
+  --accent-soft: #2c5f9622;
+
+  /* --- chip pane ------------------------------------------------------- */
+  --ink-3d:      #2a251d;     /* polygon outlines */
+  --substrate:   #b9b3a8;   /* the ground the chip sits on */
+  --sun:         #fff4dc;
+
+  /* oslo as a sequential ramp, dark to light, for colouring nets by hash.
+     The ends are left off: near-black and near-white both vanish on cream. */
+  --oslo-seq-0: #0b1a2c;
+  --oslo-seq-1: #143252;
+  --oslo-seq-2: #274d78;
+  --oslo-seq-3: #4a6f9d;
+  --oslo-seq-4: #7a97bd;
+  --oslo-seq-5: #a7bbd1;
+  --oslo-seq-6: #d1dbe6;
+
+  /* three dark tints, one per signal pin, for following a wire out of a cell */
+  --tint-a: #8a3a2c;
+  --tint-b: #2f6b3a;
+  --tint-x: #5a3d8a;
+  --tint-power: #6c665c;
+
+  /* a wire that is high while the run plays. Warm, so it reads against a blue chip. */
+  --live: #c8551f;
+
+  /* something lifted out of the die and shown on its own. It has to carry
+     against cream, so it is a mid blue rather than the pale end of a ramp. */
+  --pick: #5b8fc9;
+
+  /* One colour per region of the die, for the frames, the orbs and for
+     lighting what each region holds.
+
+     Eleven stops taken along batlow, from just past its near-black head to
+     just before its pink tail, and then assigned so that no two regions that
+     touch on the die get neighbouring colours. Batlow is a sequential map --
+     one path through colour space ordered by lightness -- so it cannot give
+     eleven bright hues at one lightness: sampling it evenly by index gives
+     eleven navies and evenly by lightness gives eleven oranges. Spanning the
+     whole ramp instead separates the blocks by value as well as by hue, which
+     is what makes them tell apart at die scale. Worst touching pair went from
+     0.24 to 0.50 on hue-and-lightness distance. */
+  --region-0: #828231;     /* column counter */
+  --region-1: #356a59;     /* row counter */
+  --region-2: #226061;     /* phase */
+  --region-3: #c09036;     /* shared decode */
+  --region-4: #a18a2b;     /* column checkers */
+  --region-5: #f19d6b;     /* window tail */
+  --region-6: #4d734d;     /* region checkers */
+  --region-7: #175262;     /* window */
+  --region-8: #114360;     /* star counter */
+  --region-9: #fca890;     /* verdict */
+  --region-10: #0d315d;    /* output writer */
+
+  /* Before the process is known the stack has no colours, but it still has
+     layers, so the ramp alternates light and dark: two layers next to each
+     other must never be the same value. Warm greys, the colour of paper. */
+
+
+  --grey-0: #4a463e;
+  --grey-1: #cfc9bb;
+  --grey-2: #6d685c;
+  --grey-3: #b6afa0;
+  --grey-4: #575249;
+  --grey-5: #c6bfb0;
+  --grey-6: #7d776a;
+  --grey-7: #ada695;
+  --grey-8: #615c52;
+  --grey-9: #bdb6a6;
+  --grey-10: #8a8375;
+  --grey-11: #a49d8c;
+  --grey-12: #6a6459;
+  --grey-13: #b1aa99;
+  --grey-14: #767063;
+
+  /* the stack, bottom to top, in oslo. Used once the process is known. */
+  --layer-0 : #030609;      /* nwell */
+  --layer-1 : #f9f9f9;      /* diff */
+  --layer-2 : #4e7abb;      /* poly */
+  --layer-3 : #9fafc9;      /* licon1 */
+  --layer-4 : #163a5d;      /* li1 */
+  --layer-5 : #7a98ca;      /* mcon */
+  --layer-6 : #c9cdd4;      /* met1 */
+  --layer-7 : #26578c;      /* via */
+  --layer-8 : #0e1f31;      /* met2 */
+  --layer-9 : #658ac7;      /* via2 */
+  --layer-10: #e0e1e4;      /* met3 */
+  --layer-11: #3666a4;      /* via3 */
+  --layer-12: #1d4875;      /* met4 */
+  --layer-13: #8ca3c9;      /* via4 */
+  --layer-14: #112b45;      /* met5 */
+
+  /* the same stack before the process is known: warm grey, low to high */
+
+  /* --- type and measure ------------------------------------------------ */
+  --serif: "ET Book", "EB Garamond", Palatino, "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --measure: 34rem;           /* ~68 characters at 17px ET Book */
+  --anchor: 50vh;             /* the line an active heading lines up with */
+  --approach: 60vh;           /* the scroll over which one beat gives way to the next */
+}
+
+
+/* --- other schemes ------------------------------------------------------
+   Picked at the top of the page. Each swaps the layer ramp, the ramp nets are
+   hashed onto, and the accent; the page's greys stay. The ramps are the
+   categorical palettes from the viewer kit; the accent is a mid swatch of the
+   same family so links and markers sit with the chip. */
+
+:root[data-scheme="batlow"] {
+  --pick: #3f8fb4;
+  --layer-0: #011959;
+  --layer-1: #faccfa;
+  --layer-2: #828231;
+  --layer-3: #226061;
+  --layer-4: #f19d6b;
+  --layer-5: #4d734d;
+  --layer-6: #114360;
+  --layer-7: #fdb4b4;
+  --layer-8: #c09036;
+  --layer-9: #175262;
+  --layer-10: #fcbfd6;
+  --layer-11: #fca890;
+  --layer-12: #356a59;
+  --layer-13: #0d315d;
+  --layer-14: #a18a2b;
+  --oslo-seq-0: #0d315d;
+  --oslo-seq-1: #175262;
+  --oslo-seq-2: #356a59;
+  --oslo-seq-3: #828231;
+  --oslo-seq-4: #c09036;
+  --oslo-seq-5: #fca890;
+  --oslo-seq-6: #fcbfd6;
+  --accent: #226061;
+  --accent-soft: #22606122;
+  --live: #c8551f;
+}
+
+:root[data-scheme="davos"] {
+  --pick: #5f93cf;
+  --layer-0: #00054a;
+  --layer-1: #fdfdf4;
+  --layer-2: #688b94;
+  --layer-3: #2d5895;
+  --layer-4: #b2c08f;
+  --layer-5: #4b769d;
+  --layer-6: #133075;
+  --layer-7: #87a089;
+  --layer-8: #e8ebc0;
+  --layer-9: #081c61;
+  --layer-10: #9aae88;
+  --layer-11: #76958e;
+  --layer-12: #3b689c;
+  --layer-13: #cfd6a2;
+  --layer-14: #1f4487;
+  --oslo-seq-0: #081c61;
+  --oslo-seq-1: #1f4487;
+  --oslo-seq-2: #3b689c;
+  --oslo-seq-3: #688b94;
+  --oslo-seq-4: #87a089;
+  --oslo-seq-5: #b2c08f;
+  --oslo-seq-6: #e8ebc0;
+  --accent: #2d5895;
+  --accent-soft: #2d589522;
+  --live: #c8551f;
+}
+
+:root[data-scheme="lajolla"] {
+  --pick: #6d93bd;
+  --layer-0: #ffffcc;
+  --layer-1: #1a1a01;
+  --layer-2: #de764f;
+  --layer-3: #7f3b34;
+  --layer-4: #f2c360;
+  --layer-5: #492a1b;
+  --layer-6: #b84f47;
+  --layer-7: #fbe992;
+  --layer-8: #e99b53;
+  --layer-9: #633328;
+  --layer-10: #fdf5af;
+  --layer-11: #302210;
+  --layer-12: #f7d875;
+  --layer-13: #9c443f;
+  --layer-14: #edae56;
+  --oslo-seq-0: #302210;
+  --oslo-seq-1: #633328;
+  --oslo-seq-2: #9c443f;
+  --oslo-seq-3: #de764f;
+  --oslo-seq-4: #edae56;
+  --oslo-seq-5: #f7d875;
+  --oslo-seq-6: #fdf5af;
+  --accent: #7f3b34;
+  --accent-soft: #7f3b3422;
+  --live: #1a4a8a;
+}
+
+:root[data-scheme="turku"] {
+  --pick: #7089a8;
+  --layer-0: #070707;
+  --layer-1: #ffe6e6;
+  --layer-2: #948d5b;
+  --layer-3: #e5aa90;
+  --layer-4: #4d4c3b;
+  --layer-5: #6d6c4a;
+  --layer-6: #c3a374;
+  --layer-7: #fbc3bd;
+  --layer-8: #2b2b26;
+  --layer-9: #3c3c32;
+  --layer-10: #d6a780;
+  --layer-11: #fed4d3;
+  --layer-12: #ad9b68;
+  --layer-13: #7f7d52;
+  --layer-14: #1c1c19;
+  --oslo-seq-0: #1c1c19;
+  --oslo-seq-1: #3c3c32;
+  --oslo-seq-2: #6d6c4a;
+  --oslo-seq-3: #948d5b;
+  --oslo-seq-4: #c3a374;
+  --oslo-seq-5: #e5aa90;
+  --oslo-seq-6: #fed4d3;
+  --accent: #6d6c4a;
+  --accent-soft: #6d6c4a22;
+  --live: #c8551f;
+}
