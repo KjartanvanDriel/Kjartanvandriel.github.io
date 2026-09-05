@@ -50,6 +50,9 @@ a:hover { background: var(--accent-soft); border-bottom-color: var(--accent); }
 a.fn { border: 0; font-size: .72em; vertical-align: super; line-height: 0; padding: 0 .1em; }
 a.fn:hover { background: none; text-decoration: none; }
 
+/* a name in code in the prose, at the body's own size */
+code { font: 400 1em var(--mono); }
+
 /* a word in the prose that an arrow runs from */
 .pin { font-family: var(--mono); font-size: .82em; letter-spacing: .04em;
        color: var(--accent); white-space: nowrap; }
@@ -203,7 +206,7 @@ figcaption { font: 400 .68rem/1.5 var(--mono); letter-spacing: .05em;
         border-radius: 4px; font: 400 .66rem/1.6 var(--mono); color: var(--ink-2); white-space: pre;
         overflow-x: auto; }
 .code .ln { display: block; padding: 0 .3rem; border-radius: 2px; }
-.code .ln.hot { background: var(--accent-soft); color: var(--ink); }
+.code .ln.hot { background: none; }   /* no line is picked out: the listing is read whole */
 
 /* a region as a black box */
 .io .chip { display: inline-block; background: var(--rc, var(--accent)); color: var(--cream);
