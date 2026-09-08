@@ -303,7 +303,7 @@
     <p>Each piece reads the column counter, the input gate, and <code>I</code>. Nothing from the row counter, so it must behave the same in every row.</p>
     <p>We take one piece and run it. Two bits, four states. It only changes while the input gate is on, <code>I</code> is one, and the column counter is at one particular value, and then it goes 00, 01, 10, 11 and stays at 11. Its output wire is on in state 10 only.</p>
     <figure id="checker-states">
-      <figcaption>One piece as its four states. A one moves it along, a zero leaves it be, at three it stops, and only two says yes.</figcaption>
+      <figcaption>One piece as its four states. A one moves it along, a zero leaves it be, it stops counting at three, and the output is on only at two.</figcaption>
     </figure>
     <p>So each piece counts the ones in one column, stops counting at three, and says yes at exactly two. On the given input the first piece ends at 11, because that column has four ones. The eleven yes wires go on together to the big box after next.</p>
     <p>We'll call this the column count.</p>
@@ -339,7 +339,7 @@
     <h2>R9</h2>
     <p>The next box has eight memory bits and, like the last one, two pieces: four gates with no memory, and thirty-five cells with all eight bits.</p>
     <p>The four gates are the same AND tree as before, this time over the eleven yes wires of the patch count. "Every patch has two."</p>
-    <p>The other piece counts <code>I</code> while the input gate is on. When we run it, the bits hold on a zero and change on a one. As we follow the changes, no value comes back until 256 ones have gone by. So the eight bits count every one that arrives, in a code that isn't plain binary. One of its output wires is on at a single value only, the one that 22 ones reach. The given input has 38 ones, so this wire is off when the input ends.</p>
+    <p>The other piece counts <code>I</code> while the input gate is on. When we run it, the bits hold on a zero and change on a one. As we follow the changes, no value comes back until 256 ones have gone by. So the eight bits count every one that arrives, in a code that isn't plain binary. One output wire is on only when the count is 22. The given input has 38 ones, so this wire is off when the input ends.</p>
     <p>We'll call this the total count.</p>
   </section>
   <section class="beat" id="a3-R10">
