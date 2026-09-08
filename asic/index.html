@@ -295,7 +295,7 @@
     <figure id="grid-patches">
       <figcaption>The grid coloured by the four wires. Eleven values, eleven patches, and no two alike.</figcaption>
     </figure>
-    <p>We can describe the result as a lookup table from grid position to patch number. This implementation uses 147 gates. So this box answers one question: which patch is the current cell in? We'll call it the patch map.</p>
+    <p>We can describe the result as a lookup table from grid position to patch number. This implementation uses 147 gates. It tells us which patch the current cell belongs to. We'll call it the patch map.</p>
   </section>
   <section class="beat" id="a3-R5">
     <h2>R5</h2>
@@ -305,7 +305,7 @@
     <figure id="checker-states">
       <figcaption>One piece as its four states. A one moves it along, a zero leaves it be, at three it stops, and only two says yes.</figcaption>
     </figure>
-    <p>So each piece counts the ones in one column, stops counting at three, and says yes at exactly two. On the given input the first piece ends at 11, because that column has four ones. Eleven columns, eleven pieces. The eleven yes wires go on together to the big box after next.</p>
+    <p>So each piece counts the ones in one column, stops counting at three, and says yes at exactly two. On the given input the first piece ends at 11, because that column has four ones. The eleven yes wires go on together to the big box after next.</p>
     <p>We'll call this the column count.</p>
   </section>
   <section class="beat" id="a3-R6">
@@ -319,21 +319,21 @@
   <section class="beat" id="a3-R7">
     <h2>R7</h2>
     <p>This box is the column count once more, with one input swapped: instead of the column counter, it reads the four wires of the patch map. Again eleven pieces that don't talk to each other.</p>
-    <p>Running one of them gives the same four states and the same rule, but it moves on the ones in one patch. Eleven patches, eleven pieces, each saying yes at exactly two. The eleven yes wires go on together to the box after next.</p>
+    <p>Running one of them gives the same four states and the same rule, but it moves on the ones in one patch. Each piece checks for exactly two ones in its patch. The eleven yes wires go on together to the box after next.</p>
     <p>We'll call this the patch count.</p>
   </section>
   <section class="beat" id="a3-R8">
     <h2>R8</h2>
-    <p>We can look at this box one piece at a time. It has thirteen memory bits. Following the inner wires gives us two pieces: a small one of four gates with no memory, and a large one of twenty-nine cells holding all thirteen bits. We treat them separately.</p>
-    <p>The small piece is easy. The eleven yes wires of the column count go in, one wire comes out, and the four gates are an AND tree: the output is on only when all eleven are. It means "every column has two", and it goes straight to the second-to-last box.</p>
-    <p>The large piece takes more care. Twelve of its memory bits form a shift register. While the input gate is on, the first stores <code>I</code> and each following bit copies the one before it. They hold the previous twelve accepted input bits.</p>
+    <p>This box has thirteen memory bits. Following the inner wires gives us two pieces: a small one of four gates with no memory, and a large one of twenty-nine cells holding all thirteen bits.</p>
+    <p>The eleven yes wires of the column count go in, one wire comes out, and the four gates are an AND tree: the output is on only when all eleven are. It means "every column has two", and it goes straight to the second-to-last box.</p>
+    <p>In the larger piece, twelve of the memory bits form a shift register. While the input gate is on, the first stores <code>I</code> and each following bit copies the one before it. They hold the previous twelve accepted input bits.</p>
     <p>Since the input is an 11 by 11 grid arriving one row at a time, we can give those delays a position. The previous input bit is the cell immediately to the left. Eleven bits back is the cell directly above, whilst ten and twelve bits back are above-right and above-left. These four delays identify the earlier neighbours where they exist. The two signals from R6 mask out comparisons that would cross the left or right edge of the grid.</p>
     <figure id="window-grid">
       <figcaption>The previous twelve input bits, with the four neighbour positions used for comparison. Comparisons are masked at the grid edges.</figcaption>
     </figure>
     <p>The remaining gates combine those four bits with the arriving <code>I</code>: while the input gate is on, if the new bit is one and any valid earlier neighbour is also one, the thirteenth memory bit is set. It then feeds back into itself, so once this has happened it remains set for the rest of the input.</p>
     <p>Those four comparisons are also enough. The other four neighbours of a cell are to its right or below it and haven't arrived yet. When they do arrive, the current cell will instead be one of <em>their</em> four previous neighbours. So every adjacent pair only needs to be checked once.</p>
-    <p>The chain is therefore turning our one-dimensional stream back into just enough of a two-dimensional neighbourhood to test whether two ones touch, either by an edge or a corner. We'll call the whole thing the neighbor check.</p>
+    <p>This checks whether two ones touch along an edge or at a corner. We'll call it the neighbour check.</p>
   </section>
   <section class="beat" id="a3-R9">
     <h2>R9</h2>
@@ -344,7 +344,7 @@
   </section>
   <section class="beat" id="a3-R10">
     <h2>R10</h2>
-    <p>Almost at the end, the box that drives the <code>success</code> port. Six wires in, and by now every one of them has a name: the input-complete flag, the row check, the neighbor check, "every column has two", "every patch has two", and the total count. Three signals go to the output writer. One of them also drives the <code>success</code> port.</p>
+    <p>This box drives the <code>success</code> port. It reads six wires: the input-complete flag, the row check, the neighbour check, "every column has two", "every patch has two", and the total count. Three signals go to the output writer. One of them also drives the <code>success</code> port.</p>
     <p>Walking back from the port, we find a memory bit driven by a small network of gates. On the tick after the input is complete, it records whether all the checks passed. It then holds that result until reset. On the given input it stays at zero.</p>
     <p>So the chip says yes to a grid with two ones in every row, two in every column, two in every patch, no two touching, and 22 in all. This is the success bit.</p>
     <p>The rectangle also holds two more memory bits. One starts the readout after the input ends. The other records the case where all the counts pass but the neighbour check fails, so the output writer can choose a different message.</p>
