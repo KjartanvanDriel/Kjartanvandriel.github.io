@@ -13,18 +13,18 @@
 
 <!-- ============================= prose ============================= -->
 <main class="prose">
-  <nav class="toc"><ol><li><a class="part" href="#a1"><span class="n">1</span>What is GDS?</a></li><li><a class="part" href="#a2"><span class="n">2</span>Recovering the circuit</a></li><li><a class="part" href="#a3"><span class="n">3</span>Inferring the circuit</a></li></ol></nav>
+  <nav class="toc"><ol><li><a class="part" href="#a1"><span class="n">1</span>What is GDS?</a></li><li><a class="part" href="#a2"><span class="n">2</span>Recovering the circuit</a></li><li><a class="part" href="#a3"><span class="n">3</span>Inferring what the circuit does</a></li></ol></nav>
   <header class="title" id="title">
     <p class="kicker">Kjartan van Driel &amp; Leander Post</p>
     <h1>Reverse engineering an ASIC</h1>
     <p class="dek">Per aspera ad astra</p>
     <p>Jane Street recently released <a href="https://blog.janestreet.com/can-you-reverse-engineer-an-asic/">a puzzle</a> where the goal is to reverse engineer an ASIC chip, figure out what it does, and submit a solution. I urged my friend Leander to join me and see if we could figure it out. Along the way, it dawned on me that the road to the solution could be illustrated in particularly pretty terms, so here is my attempt at that.</p>
-    <p>This is intended as a solution, particularly for those who read the challenge and decided they couldn't quite fit it into their schedule. It's supposed to convey the central ideas you would need to arrive at a solution.</p>
+    <p>This writeup follows our solution, for those who couldn't quite fit the challenge into their schedule. We first examine the GDS format, then recover a circuit we can simulate, and finally work out what input it accepts.</p>
   </header>
   <header class="title act" id="a1">
     <p class="kicker">part I of III</p>
     <h1>What is GDS?</h1>
-    <p class="lede">First, we have to open a file. Surely this is the easy bit.</p>
+    <p class="lede">The GDS file describes the chip's physical layout. We start by looking at how its layers and cells represent circuit components.</p>
   </header>
   <section class="beat" id="a1-files">
     <h2>Two files</h2>
@@ -185,7 +185,7 @@
   <header class="title act" id="a2">
     <p class="kicker">part II of III</p>
     <h1>Recovering the circuit</h1>
-    <p class="lede">Now that we understand how a GDS file defines the layout of a chip die, we need to figure out how to get the circuit back.</p>
+    <p class="lede">Once we know what the cells do, we need to determine how they connect. This gives us a netlist that we can simulate and check against the supplied example.</p>
   </header>
   <section class="beat" id="a2-abstract">
     <h2>Abstract the cells</h2>
@@ -233,9 +233,8 @@
   </section>
   <header class="title act" id="a3">
     <p class="kicker">part III of III</p>
-    <h1>Inferring the circuit</h1>
-    <p>Now that we can run the circuit, it's time to figure out what it does. In general, this is difficult because the same function can be implemented with many different arrangements of gates. Trying every possible 121-bit input would mean checking 2^121 combinations.</p>
-    <p>Here, however, we've been given generous hints, namely that the location of each component is meaningful.</p>
+    <h1>Inferring what the circuit does</h1>
+    <p>We can now run the circuit on any input. Finding an input it accepts requires understanding what it checks. The puzzle tells us that the positions of the components are meaningful, so we use the layout to divide the circuit into smaller parts and examine their behaviour.</p>
   </header>
   <section class="beat" id="a3-look">
     <h2>Look at the layout</h2>
