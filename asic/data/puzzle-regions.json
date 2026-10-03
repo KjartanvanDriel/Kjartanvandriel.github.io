@@ -1,0 +1,115 @@
+{
+ "_comment": "220/0 rectangles of puzzle_regions.gds. Numbered by trophic level from R1, earliest in the flow, to R11, last; Act III walks them in that order. Named as the prose names them once each is opened; the analysis file puzzle_region_names.json keeps the older analysis names.",
+ "regions": [
+  {
+   "id": "R1",
+   "name": "column counter",
+   "b": [
+    17.2,
+    137.1,
+    43.5,
+    169.3
+   ]
+  },
+  {
+   "id": "R2",
+   "name": "row counter",
+   "b": [
+    18.9,
+    88.1,
+    45.5,
+    113.0
+   ]
+  },
+  {
+   "id": "R3",
+   "name": "input gate",
+   "b": [
+    19.7,
+    193.4,
+    45.1,
+    209.8
+   ]
+  },
+  {
+   "id": "R4",
+   "name": "patch map",
+   "b": [
+    142.8,
+    8.8,
+    197.1,
+    62.9
+   ]
+  },
+  {
+   "id": "R5",
+   "name": "column count",
+   "b": [
+    99.8,
+    175.6,
+    132.9,
+    291.4
+   ]
+  },
+  {
+   "id": "R6",
+   "name": "row check",
+   "b": [
+    65.4,
+    89.8,
+    96.5,
+    117.8
+   ]
+  },
+  {
+   "id": "R7",
+   "name": "patch count",
+   "b": [
+    105.8,
+    36.2,
+    133.5,
+    157.1
+   ]
+  },
+  {
+   "id": "R8",
+   "name": "neighbor check",
+   "b": [
+    65.9,
+    130.7,
+    98.6,
+    175.1
+   ]
+  },
+  {
+   "id": "R9",
+   "name": "total count",
+   "b": [
+    64.9,
+    15.8,
+    99.3,
+    65.2
+   ]
+  },
+  {
+   "id": "R10",
+   "name": "success bit",
+   "b": [
+    154.1,
+    262.9,
+    187.1,
+    293.2
+   ]
+  },
+  {
+   "id": "R11",
+   "name": "output writer",
+   "b": [
+    143.4,
+    66.8,
+    197.4,
+    262.6
+   ]
+  }
+ ]
+}

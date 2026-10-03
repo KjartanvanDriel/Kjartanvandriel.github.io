@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 248">
+  <defs>
+    <pattern id="ox" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="6" stroke="var(--grey-1)" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect x="20" y="118" width="520" height="74" fill="var(--pane)" stroke="var(--grey-2)"/>
+  <text x="28" y="184" font-family="ui-monospace,Menlo,monospace" font-size="15" fill="var(--ink-2)">p substrate</text>
+  <rect x="20" y="96" width="520" height="22" fill="url(#ox)" opacity=".6"/>
+  <!-- The depletion region: carriers pushed out of the p body around the two
+       junctions and under the gate. Without it the inversion layer is a fact
+       with no cause, which is the half of the picture textbooks never omit. -->
+  <path d="M118 112 L118 160 L442 160 L442 112 L430 112 L430 146 L320 146
+           L320 113 L240 113 L240 146 L130 146 L130 112 Z"
+        fill="var(--accent)" fill-opacity=".10" stroke="var(--accent)"
+        stroke-width="1" stroke-dasharray="4 3" opacity=".75"/>
+  <rect x="130" y="112" width="110" height="34" fill="var(--layer-1)" stroke="var(--ink-3d)"/>
+  <rect x="320" y="112" width="110" height="34" fill="var(--layer-1)" stroke="var(--ink-3d)"/>
+  <rect x="240" y="108" width="80" height="5" fill="var(--cream)" stroke="var(--ink-3d)" stroke-width=".8"/>
+  <rect x="238" y="76" width="84" height="32" fill="var(--layer-2)" stroke="var(--ink-3d)"/>
+  <path d="M240 113 L320 113" stroke="var(--accent)" stroke-width="2.4" stroke-dasharray="5 3"/>
+  <g stroke="var(--ink)" stroke-width="1.6" fill="none">
+    <path d="M185 112v-34h-60"/><path d="M375 112v-34h60"/><path d="M280 76v-30"/>
+  </g>
+  <g fill="var(--ink)"><circle cx="185" cy="112" r="2.6"/><circle cx="375" cy="112" r="2.6"/></g>
+  <g font-family="ui-monospace,Menlo,monospace" font-size="15" fill="var(--ink-2)">
+    <text x="138" y="134">n+ source</text><text x="328" y="134">n+ drain</text>
+    <text x="330" y="176">depletion region</text>
+    <text x="280" y="97" text-anchor="middle" fill="var(--cream)">poly gate</text>
+    <text x="326" y="105">oxide</text>
+    <text x="60" y="74" text-anchor="middle">source</text>
+    <text x="500" y="74" text-anchor="middle">drain</text>
+    <text x="280" y="42" text-anchor="middle">gate</text>
+    <text x="280" y="128" text-anchor="middle" fill="var(--accent)">channel</text>
+  </g>
+  <text x="20" y="212" font-family="ui-monospace,Menlo,monospace" font-size="15" fill="var(--ink)">A voltage on the gate pulls a channel together under the</text>
+  <text x="20" y="234" font-family="ui-monospace,Menlo,monospace" font-size="15" fill="var(--ink)">oxide, and current runs source to drain.</text>
+</svg>

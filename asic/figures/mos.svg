@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 314">
+  <g stroke="var(--ink)" stroke-width="2" fill="none" stroke-linecap="round">
+    <path d="M150 26v92M182 44v56"/>
+    <path d="M182 54h52M182 90h52M234 54v-26h40M234 90v26h40"/>
+    <path d="M150 72h-46"/>
+  </g>
+  <g fill="var(--ink)"><circle cx="274" cy="28" r="3.5"/><circle cx="274" cy="116" r="3.5"/><circle cx="104" cy="72" r="3.5"/></g>
+  <g font-family="ui-monospace,Menlo,monospace" font-size="15" fill="var(--ink-2)">
+    <text x="94" y="66" text-anchor="end">gate</text>
+    <text x="286" y="33">drain</text><text x="286" y="121">source</text>
+  </g>
+  <text x="150" y="150" font-family="ui-monospace,Menlo,monospace" font-size="15" fill="var(--ink)">nMOS: conducts when the gate is high</text>
+
+  <g stroke="var(--ink)" stroke-width="2" fill="none" stroke-linecap="round">
+    <path d="M150 190v92M182 208v56"/>
+    <path d="M182 218h52M182 254h52M234 218v-26h40M234 254v26h40"/>
+    <path d="M150 236h-24"/>
+    <circle cx="118" cy="236" r="7" fill="var(--cream)"/>
+    <path d="M111 236h-7"/>
+  </g>
+  <g fill="var(--ink)"><circle cx="274" cy="192" r="3.5"/><circle cx="274" cy="280" r="3.5"/><circle cx="104" cy="236" r="3.5"/></g>
+  <g font-family="ui-monospace,Menlo,monospace" font-size="15" fill="var(--ink-2)">
+    <text x="94" y="230" text-anchor="end">gate</text>
+    <text x="286" y="197">source</text><text x="286" y="285">drain</text>
+  </g>
+  <text x="150" y="300" font-family="ui-monospace,Menlo,monospace" font-size="15" fill="var(--ink)">pMOS: conducts when the gate is low</text>
+</svg>
